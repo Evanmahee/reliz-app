@@ -2,6 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import { PrismaClientInitializationError } from "@prisma/client/runtime/library";
 import {
   clearSessionCookie,
   createSessionToken,
@@ -15,6 +16,16 @@ export async function loginAction(formData: FormData) {
   if (!email || !password) {
     redirect("/connexion?erreur=champs");
   }
+
+  if (!process.env.AUTH_SECRET?.trim()) {
+    console.error("[loginAction] AUTH_SECRET manquant (ajoutez-la sur Vercel)");
+    redirect("/connexion?erreur=config");
+  }
+  if (!process.env.DATABASE_URL?.trim()) {
+    console.error("[loginAction] DATABASE_URL manquant");
+    redirect("/connexion?erreur=config");
+  }
+
   try {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
@@ -25,6 +36,13 @@ export async function loginAction(formData: FormData) {
     redirect("/dashboard");
   } catch (e) {
     console.error("[loginAction]", e);
+    if (e instanceof PrismaClientInitializationError) {
+      redirect("/connexion?erreur=db");
+    }
+    const msg = e instanceof Error ? e.message : "";
+    if (/P1001|P1017|Can't reach database/i.test(msg)) {
+      redirect("/connexion?erreur=db");
+    }
     redirect("/connexion?erreur=serveur");
   }
 }

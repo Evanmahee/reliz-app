@@ -16,9 +16,15 @@ export default async function ConnexionPage({
     msg = "Email ou mot de passe incorrect.";
   } else if (sp.erreur === "champs") {
     msg = "Merci de remplir tous les champs.";
+  } else if (sp.erreur === "config") {
+    msg =
+      "Variables manquantes sur Vercel : ajoutez AUTH_SECRET et DATABASE_URL (voir .env.example).";
+  } else if (sp.erreur === "db") {
+    msg =
+      "La base Supabase est injoignable depuis Vercel. Dans Supabase → Connect, utilisez le Session pooler (port 5432, hôte …pooler.supabase.com) comme DATABASE_URL, pas la connexion directe.";
   } else if (sp.erreur === "serveur") {
     msg =
-      "Connexion indisponible (base de données ou configuration serveur). Réessayez plus tard.";
+      "Erreur serveur inattendue. Consultez les logs Vercel ou réessayez plus tard.";
   }
 
   return (
