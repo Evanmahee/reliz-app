@@ -24,7 +24,7 @@ export default async function ConnexionPage({
       "La base de données est injoignable ou renvoie une erreur (migrations manquantes, URL incorrecte, timeout…). Sur Supabase → Connect, privilégiez le Session pooler (port 5432). Vérifiez aussi que les tables existent (script SQL initial).";
   } else if (sp.erreur === "session") {
     msg =
-      "Impossible d’enregistrer la session (JWT ou cookie). Vérifiez AUTH_SECRET sur Vercel (sans guillemets parasites), HTTPS activé, et les logs de fonction.";
+      "Impossible d’enregistrer la session (JWT ou cookie). Vérifiez AUTH_SECRET (sans guillemets parasites), les logs serveur, et en prod sur HTTP mettez NEXT_PUBLIC_APP_URL en https ou COOKIE_SECURE=0.";
   } else if (sp.erreur === "serveur") {
     msg =
       "Erreur serveur inattendue. Consultez les logs Vercel ou réessayez plus tard.";

@@ -3,8 +3,22 @@ import { cookies } from "next/headers";
 
 export const SESSION_COOKIE = "reliz_session";
 
+/**
+ * Ne pas utiliser uniquement NODE_ENV === "production" : en prod locale (`npm start`)
+ * l’URL est souvent en http:// et les navigateurs refusent un cookie Secure → pas de session.
+ */
+export function shouldUseSecureSessionCookie(): boolean {
+  const v = process.env.COOKIE_SECURE?.trim().toLowerCase();
+  if (v === "true" || v === "1") return true;
+  if (v === "false" || v === "0") return false;
+  const base = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "";
+  if (base.startsWith("https://")) return true;
+  if (process.env.VERCEL === "1") return true;
+  return false;
+}
+
 function getSecret() {
-  const s = process.env.AUTH_SECRET;
+  const s = process.env.AUTH_SECRET?.trim();
   if (!s) throw new Error("AUTH_SECRET manquant");
   return new TextEncoder().encode(s);
 }
@@ -39,7 +53,7 @@ export async function setSessionCookie(token: string) {
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureSessionCookie(),
     path: "/",
     maxAge: 60 * 60 * 24 * 14,
   });
@@ -47,5 +61,11 @@ export async function setSessionCookie(token: string) {
 
 export async function clearSessionCookie() {
   const jar = await cookies();
-  jar.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  jar.set(SESSION_COOKIE, "", {
+    path: "/",
+    maxAge: 0,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: shouldUseSecureSessionCookie(),
+  });
 }

@@ -6,7 +6,7 @@ const SESSION_COOKIE = "reliz_session";
 
 export async function middleware(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
-  const secret = process.env.AUTH_SECRET;
+  const secret = process.env.AUTH_SECRET?.trim();
   if (!secret) {
     return NextResponse.next();
   }
@@ -22,5 +22,9 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/api/evenements/:path*"],
+  matcher: [
+    "/dashboard",
+    "/dashboard/:path*",
+    "/api/evenements/:path*",
+  ],
 };
