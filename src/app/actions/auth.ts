@@ -26,14 +26,9 @@ export async function loginAction(formData: FormData) {
     redirect("/connexion?erreur=config");
   }
 
+  let user;
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      redirect("/connexion?erreur=identifiants");
-    }
-    const token = await createSessionToken(user.id);
-    await setSessionCookie(token);
-    redirect("/dashboard");
+    user = await prisma.user.findUnique({ where: { email } });
   } catch (e) {
     console.error("[loginAction]", e);
     if (e instanceof PrismaClientInitializationError) {
@@ -45,6 +40,15 @@ export async function loginAction(formData: FormData) {
     }
     redirect("/connexion?erreur=serveur");
   }
+
+  // Important : redirect() lève une exception interne Next.js — ne pas la piéger dans un try/catch.
+  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    redirect("/connexion?erreur=identifiants");
+  }
+
+  const token = await createSessionToken(user.id);
+  await setSessionCookie(token);
+  redirect("/dashboard");
 }
 
 export async function logoutAction() {
