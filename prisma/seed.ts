@@ -1,8 +1,8 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
-import { createPrismaClient } from "../src/lib/prisma";
+import { PrismaClient } from "@prisma/client";
 
-const prisma = createPrismaClient();
+const prisma = new PrismaClient();
 
 async function main() {
   const email = "demo@reliz.app";
