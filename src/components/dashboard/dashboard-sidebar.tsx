@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/app/actions/auth";
+import { RelizLogo } from "@/components/brand/reliz-logo";
 import {
   DASHBOARD_NAV_ITEMS,
   isDashboardNavActive,
 } from "@/lib/dashboard-nav";
 import { Button } from "@/components/ui/button";
+import { MaterialSymbol } from "@/components/ui/material-symbol";
 
 export function DashboardSidebar({
   userName,
@@ -19,19 +21,12 @@ export function DashboardSidebar({
   const pathname = usePathname();
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex h-svh w-60 flex-col overflow-y-auto border-r border-zinc-200 bg-white max-lg:hidden">
-      <div className="flex items-center gap-2 px-5 py-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-100 text-sm font-semibold text-zinc-900">
-          R
-        </div>
-        <div>
-          <p className="text-sm font-semibold tracking-tight text-zinc-900">
-            Reliz
-          </p>
-          <p className="text-[11px] font-medium text-zinc-400">
-            Espace traiteur
-          </p>
-        </div>
-      </div>
+      <Link href="/dashboard" className="block px-5 py-6">
+        <RelizLogo height={26} priority />
+        <p className="mt-2 text-[11px] font-medium text-zinc-400">
+          Espace traiteur
+        </p>
+      </Link>
       <nav className="flex flex-col gap-1 px-3 pb-4">
         <p className="w-full px-2 pb-1 pt-2 text-[11px] font-medium text-zinc-400">
           Navigation
@@ -42,12 +37,18 @@ export function DashboardSidebar({
             <Link
               key={l.href}
               href={l.href}
-              className={`rounded-[1.15rem] px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 rounded-[1.15rem] px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-violet-100/70 text-zinc-900"
                   : "text-zinc-600 hover:bg-zinc-50"
               }`}
             >
+              <MaterialSymbol
+                name={l.icon}
+                filled={active}
+                size={22}
+                className={active ? "text-zinc-900" : "text-zinc-500"}
+              />
               {l.label}
             </Link>
           );

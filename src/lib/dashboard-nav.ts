@@ -1,13 +1,15 @@
 export type DashboardNavItem = {
   href: string;
   label: string;
+  /** Nom Material Symbols Rounded — https://fonts.google.com/icons */
+  icon: string;
 };
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/evenements", label: "Événements" },
-  { href: "/dashboard/historique", label: "Historique" },
-  { href: "/dashboard/parametres", label: "Paramètres" },
+  { href: "/dashboard", label: "Dashboard", icon: "space_dashboard" },
+  { href: "/dashboard/evenements", label: "Événements", icon: "event" },
+  { href: "/dashboard/historique", label: "Historique", icon: "history" },
+  { href: "/dashboard/parametres", label: "Paramètres", icon: "settings" },
 ];
 
 export function isDashboardNavActive(pathname: string, href: string) {
