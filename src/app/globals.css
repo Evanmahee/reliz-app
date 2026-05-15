@@ -16,3 +16,29 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* Material Design 3 — Navigation bar (mobile) */
+:root {
+  --md3-surface: #fef7ff;
+  --md3-on-surface: #1d1b20;
+  --md3-on-surface-variant: #49454f;
+  --md3-secondary-container: #e8def8;
+  --md3-on-secondary-container: #1d192b;
+  --md3-outline-variant: #cac4d0;
+  --md3-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-nav-bar {
+  background: var(--md3-surface);
+  border-top: 1px solid var(--md3-outline-variant);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow:
+    0 1px 2px rgb(29 27 32 / 0.06),
+    0 4px 8px rgb(29 27 32 / 0.04);
+}
+
+.md3-nav-item:focus-visible {
+  outline: 2px solid var(--md3-on-surface);
+  outline-offset: 2px;
+  border-radius: 1rem;
+}

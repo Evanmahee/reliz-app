@@ -34,7 +34,7 @@ export default async function DashboardLayout({
             </Button>
           </form>
         </header>
-        <main className="min-w-0 flex-1 px-4 py-6 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] sm:px-8 lg:py-10 lg:pb-10">
+        <main className="min-w-0 flex-1 px-4 py-6 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] sm:px-8 lg:py-10 lg:pb-10">
           {children}
         </main>
       </div>

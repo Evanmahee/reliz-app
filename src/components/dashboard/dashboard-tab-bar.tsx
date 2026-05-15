@@ -10,13 +10,20 @@ import {
 const iconClass = "h-6 w-6 shrink-0";
 
 function IconDashboard({ active }: { active: boolean }) {
+  if (active) {
+    return (
+      <svg className={iconClass} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M5 3h4v8H5V3zm10 0h4v5h-4V3zM5 14h4v7H5v-7zm10 4h4v3h-4v-3z" />
+      </svg>
+    );
+  }
   return (
     <svg
       className={iconClass}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={active ? 2.25 : 2}
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
@@ -30,13 +37,20 @@ function IconDashboard({ active }: { active: boolean }) {
 }
 
 function IconEvents({ active }: { active: boolean }) {
+  if (active) {
+    return (
+      <svg className={iconClass} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10z" />
+      </svg>
+    );
+  }
   return (
     <svg
       className={iconClass}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={active ? 2.25 : 2}
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
@@ -48,13 +62,20 @@ function IconEvents({ active }: { active: boolean }) {
 }
 
 function IconHistory({ active }: { active: boolean }) {
+  if (active) {
+    return (
+      <svg className={iconClass} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" />
+      </svg>
+    );
+  }
   return (
     <svg
       className={iconClass}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={active ? 2.25 : 2}
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
@@ -66,34 +87,42 @@ function IconHistory({ active }: { active: boolean }) {
 }
 
 function IconSettings({ active }: { active: boolean }) {
+  if (active) {
+    return (
+      <svg className={iconClass} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M19.14 12.94a7.49 7.49 0 0 0 .05-.94 7.49 7.49 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.28 7.28 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.49.42l-.36 2.54a7.28 7.28 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 7.48a.5.5 0 0 0 .12.64l2.03 1.58a7.49 7.49 0 0 0-.05.94c0 .32.02.63.05.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.39 1.05.71 1.63.94l.36 2.54A.5.5 0 0 0 10 22h4a.5.5 0 0 0 .49-.42l.36-2.54c.58-.23 1.13-.55 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z" />
+      </svg>
+    );
+  }
   return (
     <svg
       className={iconClass}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={active ? 2.25 : 2}
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
     >
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
       <circle cx="12" cy="12" r="3" />
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
     </svg>
   );
 }
 
-function NavIcon({
-  href,
-  active,
-}: {
-  href: string;
-  active: boolean;
-}) {
+function NavIcon({ href, active }: { href: string; active: boolean }) {
   if (href === "/dashboard") return <IconDashboard active={active} />;
   if (href === "/dashboard/evenements") return <IconEvents active={active} />;
   if (href === "/dashboard/historique") return <IconHistory active={active} />;
   return <IconSettings active={active} />;
+}
+
+/** Libellés courts pour la barre MD3 sur petits écrans */
+function shortLabel(label: string) {
+  if (label === "Événements") return "Événements";
+  if (label === "Paramètres") return "Réglages";
+  return label;
 }
 
 export function DashboardTabBar() {
@@ -101,34 +130,45 @@ export function DashboardTabBar() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white/95 backdrop-blur-md lg:hidden"
-      style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
+      className="md3-nav-bar fixed inset-x-0 bottom-0 z-50 lg:hidden"
       aria-label="Navigation principale"
     >
-      <ul className="mx-auto flex max-w-lg items-stretch justify-around px-1 pt-1.5">
+      <ul className="mx-auto flex h-20 max-w-lg items-stretch justify-around px-2">
         {DASHBOARD_NAV_ITEMS.map((item) => {
           const active = isDashboardNavActive(pathname, item.href);
           return (
-            <li key={item.href} className="min-w-0 flex-1">
+            <li key={item.href} className="flex min-w-0 flex-1">
               <Link
                 href={item.href}
                 prefetch
-                className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1.5 transition-colors touch-manipulation active:bg-zinc-100/80 ${
-                  active
-                    ? "text-zinc-900"
-                    : "text-zinc-400 hover:text-zinc-600"
-                }`}
+                className="md3-nav-item group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 touch-manipulation"
                 aria-current={active ? "page" : undefined}
               >
                 <span
-                  className={`flex h-9 w-14 items-center justify-center rounded-xl transition-colors ${
-                    active ? "bg-violet-100/90" : "bg-transparent"
+                  className={`relative flex h-8 min-w-16 items-center justify-center rounded-full px-4 transition-[background-color,transform] duration-200 ease-standard ${
+                    active
+                      ? "bg-[var(--md3-secondary-container)]"
+                      : "bg-transparent group-active:bg-[var(--md3-on-surface)]/8"
                   }`}
                 >
-                  <NavIcon href={item.href} active={active} />
+                  <span
+                    className={
+                      active
+                        ? "text-[var(--md3-on-secondary-container)]"
+                        : "text-[var(--md3-on-surface-variant)]"
+                    }
+                  >
+                    <NavIcon href={item.href} active={active} />
+                  </span>
                 </span>
-                <span className="max-w-full truncate px-0.5 text-center text-[10px] font-semibold leading-tight tracking-tight">
-                  {item.label}
+                <span
+                  className={`max-w-full truncate px-1 text-center text-xs leading-none tracking-wide ${
+                    active
+                      ? "font-semibold text-[var(--md3-on-surface)]"
+                      : "font-medium text-[var(--md3-on-surface-variant)]"
+                  }`}
+                >
+                  {shortLabel(item.label)}
                 </span>
               </Link>
             </li>
