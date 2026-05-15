@@ -5,14 +5,17 @@ import {
   addMenuItemAction,
   deleteMenuItemFormAction,
   toggleMenuStockAction,
-  updateEventConsignesAction,
   updateEventInformationsAction,
 } from "@/app/actions/events";
+import {
+  ConsignesEditor,
+  ConsignesReadOnly,
+} from "@/components/dashboard/consignes-editor";
 import { EventQrCard } from "@/components/dashboard/event-qr-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import type { InstructionBlock } from "@/lib/instructions-blocks";
 
 type TabId = "infos" | "consignes" | "menu" | "qr";
 
@@ -36,7 +39,7 @@ export function EventDetailTabs({
   name,
   venue,
   startsAtLocal,
-  instructions,
+  instructionBlocks,
   menuItems,
   guestUrl,
   qrDownloadHref,
@@ -46,7 +49,7 @@ export function EventDetailTabs({
   name: string;
   venue: string;
   startsAtLocal: string;
-  instructions: string;
+  instructionBlocks: InstructionBlock[];
   menuItems: EventDetailTabsMenuItem[];
   guestUrl: string;
   qrDownloadHref: string;
@@ -165,28 +168,17 @@ export function EventDetailTabs({
           >
             <h2 className="text-sm font-semibold text-zinc-900">Consignes</h2>
             <p className="mt-1 text-xs text-zinc-500">
-              Instructions visibles par l’équipe sur la fiche événement.
+              Consignes pour l’équipe sur cette fiche uniquement (modifiable après
+              coup). Si vous aviez choisi une checklist à la création, le contenu a
+              été copié ici.
             </p>
             {archived ? (
-              <p className="mt-4 whitespace-pre-wrap text-sm text-zinc-800">
-                {instructions || "—"}
-              </p>
+              <ConsignesReadOnly blocks={instructionBlocks} />
             ) : (
-              <form
-                action={updateEventConsignesAction}
-                className="mt-4 space-y-4"
-              >
-                <input type="hidden" name="eventId" value={eventId} />
-                <Textarea
-                  name="instructions"
-                  defaultValue={instructions}
-                  placeholder="Tenue, contacts sur place, timing du service…"
-                  className="min-h-[200px]"
-                />
-                <Button type="submit" variant="outline">
-                  Enregistrer les consignes
-                </Button>
-              </form>
+              <ConsignesEditor
+                eventId={eventId}
+                initialBlocks={instructionBlocks}
+              />
             )}
           </div>
         ) : null}

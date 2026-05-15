@@ -8,30 +8,44 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String      @id @default(cuid())
+  email        String      @unique
   name         String?
   passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
   events       Event[]
+  checklists   Checklist[]
+}
+
+model Checklist {
+  id        String   @id @default(cuid())
+  name      String
+  blocks    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
 }
 
 model Event {
-  id           String         @id @default(cuid())
-  publicSlug   String         @unique
-  name         String
-  venue        String         @default("")
-  startsAt     DateTime?
-  endsAt       DateTime?
-  instructions String         @default("")
-  status       String         @default("LIVE")
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  ownerId      String
-  owner        User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  menuItems    MenuItem[]
-  requests     GuestRequest[]
+  id                  String         @id @default(cuid())
+  publicSlug          String         @unique
+  name                String
+  venue               String         @default("")
+  startsAt            DateTime?
+  endsAt              DateTime?
+  instructions        String         @default("")
+  instructionsBlocks  Json?
+  status              String         @default("LIVE")
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  ownerId             String
+  owner               User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  menuItems           MenuItem[]
+  requests            GuestRequest[]
 
   @@index([ownerId])
   @@index([status])

@@ -1,10 +1,12 @@
 import type { IconType } from "react-icons";
 import {
   MdEvent,
+  MdFactCheck,
   MdHistory,
   MdSettings,
   MdSpaceDashboard,
   MdOutlineEvent,
+  MdOutlineFactCheck,
   MdOutlineHistory,
   MdOutlineSettings,
   MdOutlineSpaceDashboard,
@@ -20,6 +22,7 @@ type Props = {
 const FILLED: Record<string, IconType> = {
   space_dashboard: MdSpaceDashboard,
   event: MdEvent,
+  checklist: MdFactCheck,
   history: MdHistory,
   settings: MdSettings,
 };
@@ -27,6 +30,7 @@ const FILLED: Record<string, IconType> = {
 const OUTLINE: Record<string, IconType> = {
   space_dashboard: MdOutlineSpaceDashboard,
   event: MdOutlineEvent,
+  checklist: MdOutlineFactCheck,
   history: MdOutlineHistory,
   settings: MdOutlineSettings,
 };

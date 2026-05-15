@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS "Event" (
   "startsAt"     TIMESTAMPTZ(3),
   "endsAt"       TIMESTAMPTZ(3),
   "instructions" TEXT NOT NULL DEFAULT '',
+  "instructionsBlocks" JSONB,
   "status"       TEXT NOT NULL DEFAULT 'LIVE',
   "createdAt"    TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt"    TIMESTAMPTZ(3) NOT NULL,
@@ -42,6 +43,9 @@ CREATE TABLE IF NOT EXISTS "Event" (
     FOREIGN KEY ("ownerId") REFERENCES "User" ("id")
     ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- Ancienne base créée sans JSON : ajouter la colonne (sans erreur si déjà présente)
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "instructionsBlocks" JSONB;
 
 CREATE TABLE IF NOT EXISTS "MenuItem" (
   "id"          TEXT NOT NULL,
@@ -81,6 +85,25 @@ CREATE INDEX IF NOT EXISTS "Event_status_idx" ON "Event" ("status");
 CREATE INDEX IF NOT EXISTS "MenuItem_eventId_idx" ON "MenuItem" ("eventId");
 CREATE INDEX IF NOT EXISTS "GuestRequest_eventId_idx" ON "GuestRequest" ("eventId");
 CREATE INDEX IF NOT EXISTS "GuestRequest_status_idx" ON "GuestRequest" ("status");
+
+-- -----------------------------------------------------------------------------
+-- Checklists (modèles réutilisables pour consignes / cases à cocher)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS "Checklist" (
+  "id"        TEXT NOT NULL,
+  "name"      TEXT NOT NULL,
+  "blocks"    JSONB NOT NULL,
+  "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMPTZ(3) NOT NULL,
+  "ownerId"   TEXT NOT NULL,
+  CONSTRAINT "Checklist_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "Checklist_ownerId_fkey"
+    FOREIGN KEY ("ownerId") REFERENCES "User" ("id")
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS "Checklist_ownerId_idx" ON "Checklist" ("ownerId");
 
 -- -----------------------------------------------------------------------------
 -- Compte démo (demo@reliz.app / demo1234)

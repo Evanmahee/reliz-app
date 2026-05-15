@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS } from "@/lib/constants";
 import { toDatetimeLocalValue } from "@/lib/datetime";
+import { parseInstructionsBlocks } from "@/lib/instructions-blocks";
 import { prisma } from "@/lib/prisma";
 import { EventDetailTabs } from "@/components/dashboard/event-detail-tabs";
 import { EventMoreMenu } from "@/components/dashboard/event-more-menu";
@@ -28,6 +29,11 @@ export default async function EventDetailPage({
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
     "http://localhost:3000";
   const guestUrl = `${base}/e/${event.publicSlug}`;
+
+  const instructionBlocks = parseInstructionsBlocks(
+    event.instructionsBlocks,
+    event.instructions,
+  );
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-16">
@@ -59,7 +65,7 @@ export default async function EventDetailPage({
         name={event.name}
         venue={event.venue}
         startsAtLocal={toDatetimeLocalValue(event.startsAt)}
-        instructions={event.instructions}
+        instructionBlocks={instructionBlocks}
         menuItems={event.menuItems.map((m) => ({
           id: m.id,
           name: m.name,

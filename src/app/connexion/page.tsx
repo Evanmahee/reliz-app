@@ -21,7 +21,10 @@ export default async function ConnexionPage({
       "Variables manquantes sur Vercel : ajoutez AUTH_SECRET et DATABASE_URL (voir .env.example).";
   } else if (sp.erreur === "db") {
     msg =
-      "La base Supabase est injoignable depuis Vercel. Dans Supabase → Connect, utilisez le Session pooler (port 5432, hôte …pooler.supabase.com) comme DATABASE_URL, pas la connexion directe.";
+      "La base de données est injoignable ou renvoie une erreur (migrations manquantes, URL incorrecte, timeout…). Sur Supabase → Connect, privilégiez le Session pooler (port 5432). Vérifiez aussi que les tables existent (script SQL initial).";
+  } else if (sp.erreur === "session") {
+    msg =
+      "Impossible d’enregistrer la session (JWT ou cookie). Vérifiez AUTH_SECRET sur Vercel (sans guillemets parasites), HTTPS activé, et les logs de fonction.";
   } else if (sp.erreur === "serveur") {
     msg =
       "Erreur serveur inattendue. Consultez les logs Vercel ou réessayez plus tard.";

@@ -1,10 +1,19 @@
 "use server";
 
 import { nanoid } from "nanoid";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS } from "@/lib/constants";
+import {
+  cloneBlocksWithNewIds,
+  ensureBlocksDraft,
+  flattenBlocksToPlainText,
+  parseInstructionsBlocks,
+  validateAndNormalizeBlocksFromJson,
+  INSTRUCTIONS_MAX_BLOCKS,
+} from "@/lib/instructions-blocks";
 import { prisma } from "@/lib/prisma";
 
 async function requireOwner() {
@@ -29,20 +38,34 @@ export async function createEventAction(formData: FormData) {
   const userId = await requireOwner();
   const name = String(formData.get("name") ?? "").trim();
   const venue = String(formData.get("venue") ?? "").trim();
-  const instructions = String(formData.get("instructions") ?? "").trim();
+  const checklistId = String(formData.get("checklistId") ?? "").trim();
   const startsRaw = String(formData.get("startsAt") ?? "").trim();
   if (!name) {
     redirect("/dashboard/evenements/nouveau?erreur=nom");
   }
+
+  let instructions = "";
+  let instructionsBlocks: Prisma.InputJsonValue | undefined = undefined;
+
+  if (checklistId) {
+    const template = await prisma.checklist.findFirst({
+      where: { id: checklistId, ownerId: userId },
+    });
+    if (template) {
+      const parsed = parseInstructionsBlocks(template.blocks, "");
+      const cloned = cloneBlocksWithNewIds(parsed);
+      instructions = flattenBlocksToPlainText(cloned);
+      instructionsBlocks = cloned as unknown as Prisma.InputJsonValue;
+    }
+  }
+
   let publicSlug = randomSlug();
   for (let i = 0; i < 5; i++) {
     const clash = await prisma.event.findUnique({ where: { publicSlug } });
     if (!clash) break;
     publicSlug = randomSlug();
   }
-  const startsAt = startsRaw
-    ? new Date(startsRaw)
-    : null;
+  const startsAt = startsRaw ? new Date(startsRaw) : null;
   const event = await prisma.event.create({
     data: {
       name,
@@ -52,6 +75,7 @@ export async function createEventAction(formData: FormData) {
       ownerId: userId,
       status: EVENT_STATUS.LIVE,
       startsAt: startsAt && !Number.isNaN(startsAt.getTime()) ? startsAt : null,
+      ...(instructionsBlocks !== undefined ? { instructionsBlocks } : {}),
     },
   });
   revalidatePath("/dashboard/evenements");
@@ -86,11 +110,55 @@ export async function updateEventConsignesAction(formData: FormData) {
   const userId = await requireOwner();
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return;
-  await assertEventOwned(eventId, userId);
-  const instructions = String(formData.get("instructions") ?? "").trim();
+  const ev = await assertEventOwned(eventId, userId);
+  const rawPayload = String(formData.get("instructionsPayload") ?? "").trim();
+  let normalized = rawPayload
+    ? validateAndNormalizeBlocksFromJson(rawPayload, ev.instructions)
+    : parseInstructionsBlocks(ev.instructionsBlocks, ev.instructions);
+  normalized = ensureBlocksDraft(normalized).slice(0, INSTRUCTIONS_MAX_BLOCKS);
+
   await prisma.event.update({
     where: { id: eventId },
-    data: { instructions },
+    data: {
+      instructionsBlocks: normalized as unknown as Prisma.InputJsonValue,
+      instructions: flattenBlocksToPlainText(normalized),
+    },
+  });
+  revalidatePath(`/dashboard/evenements/${eventId}`);
+  revalidatePath("/dashboard/evenements");
+  revalidatePath("/dashboard");
+}
+
+export async function toggleInstructionCheckboxAction(
+  eventId: string,
+  blockId: string,
+  checked: boolean,
+) {
+  const userId = await requireOwner();
+  await assertEventOwned(eventId, userId);
+  const ev = await prisma.event.findFirst({
+    where: { id: eventId, ownerId: userId },
+    select: { instructionsBlocks: true, instructions: true },
+  });
+  if (!ev) return;
+
+  const blocks = parseInstructionsBlocks(ev.instructionsBlocks, ev.instructions);
+  let touched = false;
+  const next = blocks.map((b) => {
+    if (b.type === "checkbox" && b.id === blockId) {
+      touched = true;
+      return { ...b, checked };
+    }
+    return b;
+  });
+  if (!touched) return;
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: {
+      instructionsBlocks: next as unknown as Prisma.InputJsonValue,
+      instructions: flattenBlocksToPlainText(next),
+    },
   });
   revalidatePath(`/dashboard/evenements/${eventId}`);
   revalidatePath("/dashboard/evenements");

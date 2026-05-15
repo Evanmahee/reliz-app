@@ -10,6 +10,7 @@ import { MaterialSymbol } from "@/components/ui/material-symbol";
 
 function shortLabel(label: string) {
   if (label === "Paramètres") return "Réglages";
+  if (label === "Checklists") return "Listes";
   return label;
 }
 
