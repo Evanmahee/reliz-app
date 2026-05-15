@@ -4,7 +4,11 @@ import type { NextRequest } from "next/server";
 
 const SESSION_COOKIE = "reliz_session";
 
-export async function middleware(req: NextRequest) {
+/**
+ * Next.js 16 : préférer `proxy` à `middleware` (runtime Node par défaut).
+ * Évite les plantages Edge sur Vercel avec la vérif JWT (jose).
+ */
+export async function proxy(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   const secret = process.env.AUTH_SECRET?.trim();
   if (!secret) {
