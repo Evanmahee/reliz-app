@@ -15,13 +15,18 @@ export async function loginAction(formData: FormData) {
   if (!email || !password) {
     redirect("/connexion?erreur=champs");
   }
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    redirect("/connexion?erreur=identifiants");
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      redirect("/connexion?erreur=identifiants");
+    }
+    const token = await createSessionToken(user.id);
+    await setSessionCookie(token);
+    redirect("/dashboard");
+  } catch (e) {
+    console.error("[loginAction]", e);
+    redirect("/connexion?erreur=serveur");
   }
-  const token = await createSessionToken(user.id);
-  await setSessionCookie(token);
-  redirect("/dashboard");
 }
 
 export async function logoutAction() {

@@ -16,6 +16,9 @@ export default async function ConnexionPage({
     msg = "Email ou mot de passe incorrect.";
   } else if (sp.erreur === "champs") {
     msg = "Merci de remplir tous les champs.";
+  } else if (sp.erreur === "serveur") {
+    msg =
+      "Connexion indisponible (base de données ou configuration serveur). Réessayez plus tard.";
   }
 
   return (
