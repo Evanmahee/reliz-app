@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  events       Event[]
+}
+
+model Event {
+  id           String         @id @default(cuid())
+  publicSlug   String         @unique
+  name         String
+  venue        String         @default("")
+  startsAt     DateTime?
+  endsAt       DateTime?
+  instructions String         @default("")
+  status       String         @default("LIVE")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  ownerId      String
+  owner        User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  menuItems    MenuItem[]
+  requests     GuestRequest[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name        String
+  description String   @default("")
+  sortOrder   Int      @default(0)
+  outOfStock  Boolean  @default(false)
+
+  @@index([eventId])
+}
+
+model GuestRequest {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tableNumber String
+  type        String
+  message     String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+
+  @@index([eventId])
+  @@index([status])
+}
