@@ -5,9 +5,11 @@ import {
   updateEventConsignesAction,
 } from "@/app/actions/events";
 import { InstructionBlocksEditor } from "@/components/dashboard/instruction-blocks-editor";
+import { useT } from "@/i18n/i18n-provider";
 import type { InstructionBlock } from "@/lib/instructions-blocks";
 
 export function ConsignesReadOnly({ blocks }: { blocks: InstructionBlock[] }) {
+  const { t } = useT();
   if (
     blocks.length === 1 &&
     blocks[0].type === "paragraph" &&
@@ -45,7 +47,7 @@ export function ConsignesReadOnly({ blocks }: { blocks: InstructionBlock[] }) {
               className="mt-1 size-4 shrink-0 rounded border-zinc-300 accent-zinc-900 opacity-70"
             />
             <span className={b.checked ? "text-zinc-500 line-through" : ""}>
-              {b.label.trim() || "(Sans titre)"}
+              {b.label.trim() || t("instructionEditor.untitled")}
             </span>
           </label>
         );
@@ -61,6 +63,7 @@ export function ConsignesEditor({
   eventId: string;
   initialBlocks: InstructionBlock[];
 }) {
+  const { t } = useT();
   return (
     <div className="mt-4">
       <InstructionBlocksEditor
@@ -70,9 +73,8 @@ export function ConsignesEditor({
         payloadFieldName="instructionsPayload"
         formAction={updateEventConsignesAction}
         toggleCheckboxAction={toggleInstructionCheckboxAction}
-        submitLabel="Enregistrer les consignes"
-        submitSuccessMessage="Consignes enregistrées"
-        checkboxSavedMessage="Case mise à jour"
+        submitLabel={t("checklists.saveConsignes")}
+        submitSuccessMessage={t("checklists.toastConsignes")}
       />
     </div>
   );

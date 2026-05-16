@@ -4,8 +4,12 @@ import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
+import { dateLocaleTag } from "@/i18n/date-locale";
+import { getT } from "@/i18n/server";
 
 export default async function HistoriquePage() {
+  const { t, locale } = await getT();
+  const dateTag = dateLocaleTag(locale);
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
   const events = await prisma.event.findMany({
@@ -16,18 +20,16 @@ export default async function HistoriquePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <div>
-        <p className="text-xs font-medium text-zinc-400">Historique</p>
+        <p className="text-xs font-medium text-zinc-400">{t("historique.tag")}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">
-          Événements archivés
+          {t("historique.title")}
         </h1>
-        <p className="mt-2 max-w-xl text-sm text-zinc-500">
-          Consultation en lecture seule. Les QR invités ne sont plus actifs.
-        </p>
+        <p className="mt-2 max-w-xl text-sm text-zinc-500">{t("historique.subtitle")}</p>
       </div>
 
       {events.length === 0 ? (
         <Card className="px-6 py-12 text-center text-sm text-zinc-500">
-          Aucun événement archivé pour le moment.
+          {t("historique.empty")}
         </Card>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
@@ -40,8 +42,8 @@ export default async function HistoriquePage() {
                     <p className="mt-1 text-xs text-zinc-500">{e.venue}</p>
                   ) : null}
                   <p className="mt-3 text-xs text-zinc-400">
-                    Archivé le{" "}
-                    {new Date(e.updatedAt).toLocaleDateString("fr-FR", {
+                    {t("historique.archivedOn")}{" "}
+                    {new Date(e.updatedAt).toLocaleDateString(dateTag, {
                       dateStyle: "medium",
                     })}
                   </p>

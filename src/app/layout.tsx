@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppToaster } from "@/components/ui/app-toaster";
+import { I18nProvider } from "@/i18n/i18n-provider";
+import { getLocale } from "@/i18n/get-locale";
+import { getT } from "@/i18n/server";
+import en from "@/i18n/messages/en";
+import fr from "@/i18n/messages/fr";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,29 +18,37 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Reliz — Événements & service invités",
-  description:
-    "Gestion d’événements pour traiteurs : carte, consignes, QR invités et demandes en direct.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: t("meta.title"),
+    description: t("meta.description"),
+  };
+}
 
 export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: "#f4f4f5",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = locale === "en" ? en : fr;
+  const htmlLang = locale === "en" ? "en" : "fr";
+
   return (
     <html
-      lang="fr"
+      lang={htmlLang}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        {children}
+        <I18nProvider locale={locale} messages={messages}>
+          {children}
+        </I18nProvider>
         <AppToaster />
       </body>
     </html>

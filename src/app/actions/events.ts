@@ -2,10 +2,14 @@
 
 import { nanoid } from "nanoid";
 import { Prisma } from "@prisma/client";
+import {
+  PrismaClientKnownRequestError,
+} from "@prisma/client/runtime/library";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS } from "@/lib/constants";
+import { isNextRedirectError } from "@/lib/is-next-redirect-error";
 import {
   cloneBlocksWithNewIds,
   ensureBlocksDraft,
@@ -66,20 +70,56 @@ export async function createEventAction(formData: FormData) {
     publicSlug = randomSlug();
   }
   const startsAt = startsRaw ? new Date(startsRaw) : null;
-  const event = await prisma.event.create({
-    data: {
-      name,
-      venue,
-      instructions,
-      publicSlug,
-      ownerId: userId,
-      status: EVENT_STATUS.LIVE,
-      startsAt: startsAt && !Number.isNaN(startsAt.getTime()) ? startsAt : null,
-      ...(instructionsBlocks !== undefined ? { instructionsBlocks } : {}),
-    },
-  });
-  revalidatePath("/dashboard/evenements");
-  redirect(`/dashboard/evenements/${event.id}`);
+  const clientEventId = String(formData.get("clientEventId") ?? "").trim();
+  const useClientId =
+    clientEventId.length >= 12 &&
+    clientEventId.length <= 36 &&
+    /^[a-zA-Z0-9_-]+$/.test(clientEventId);
+
+  try {
+    const event = await prisma.event.create({
+      data: {
+        ...(useClientId ? { id: clientEventId } : {}),
+        name,
+        venue,
+        instructions,
+        publicSlug,
+        ownerId: userId,
+        status: EVENT_STATUS.LIVE,
+        startsAt: startsAt && !Number.isNaN(startsAt.getTime()) ? startsAt : null,
+        ...(instructionsBlocks !== undefined ? { instructionsBlocks } : {}),
+      },
+    });
+    revalidatePath("/dashboard/evenements");
+    revalidatePath("/dashboard");
+    redirect(`/dashboard/evenements/${event.id}`);
+  } catch (e) {
+    if (isNextRedirectError(e)) throw e;
+    if (
+      e instanceof PrismaClientKnownRequestError &&
+      e.code === "P2002" &&
+      useClientId
+    ) {
+      const rawTarget = (e.meta as { target?: string | string[] } | undefined)
+        ?.target;
+      const target = Array.isArray(rawTarget)
+        ? rawTarget
+        : rawTarget
+          ? [rawTarget]
+          : [];
+      if (target.includes("id")) {
+        const existing = await prisma.event.findFirst({
+          where: { id: clientEventId, ownerId: userId },
+        });
+        if (existing) {
+          revalidatePath("/dashboard/evenements");
+          revalidatePath("/dashboard");
+          redirect(`/dashboard/evenements/${existing.id}`);
+        }
+      }
+    }
+    throw e;
+  }
 }
 
 export async function updateEventInformationsAction(formData: FormData) {
@@ -184,7 +224,15 @@ export async function archiveEventAction(eventId: string) {
   revalidatePath(`/dashboard/evenements/${eventId}`);
   revalidatePath("/dashboard/evenements");
   revalidatePath("/dashboard/historique");
+  revalidatePath("/dashboard");
   redirect("/dashboard/historique");
+}
+
+/** Pour les formulaires sur les cartes d’événements (liste dashboard / événements). */
+export async function archiveEventFormAction(formData: FormData) {
+  const eventId = String(formData.get("eventId") ?? "").trim();
+  if (!eventId) return;
+  await archiveEventAction(eventId);
 }
 
 export async function addMenuItemAction(formData: FormData) {

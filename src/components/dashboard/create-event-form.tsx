@@ -1,7 +1,10 @@
 "use client";
 
+import { useMemo, useRef } from "react";
 import Link from "next/link";
+import { nanoid } from "nanoid";
 import { createEventAction } from "@/app/actions/events";
+import { useT } from "@/i18n/i18n-provider";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -16,38 +19,55 @@ export function CreateEventForm({
   checklists: { id: string; name: string }[];
   showNameError: boolean;
 }) {
+  const { t } = useT();
+  const clientEventId = useMemo(() => nanoid(), []);
+  const submitLock = useRef(false);
+
   return (
     <Card className="px-5 py-6 sm:px-6 sm:py-8">
-      <form action={createEventAction} className="space-y-5">
+      <form
+        action={createEventAction}
+        onSubmit={(e) => {
+          if (submitLock.current) {
+            e.preventDefault();
+            return;
+          }
+          submitLock.current = true;
+        }}
+        className="space-y-5"
+      >
+        <input type="hidden" name="clientEventId" value={clientEventId} />
         <div>
           <label className="mb-1.5 block text-xs font-medium text-zinc-500">
-            Nom de l’événement *
+            {t("events.nameLabel")}
           </label>
-          <Input name="name" required placeholder="Mariage Camille & Sam" />
+          <Input
+            name="name"
+            required
+            placeholder={t("events.namePlaceholder")}
+          />
         </div>
         {showNameError ? (
-          <p className="text-sm text-red-600">Le nom est obligatoire.</p>
+          <p className="text-sm text-red-600">{t("events.nameRequired")}</p>
         ) : null}
         <div>
           <label className="mb-1.5 block text-xs font-medium text-zinc-500">
-            Lieu
+            {t("events.venueLabel")}
           </label>
           <Input name="venue" placeholder="Domaine des Acacias" />
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-medium text-zinc-500">
-            Date & heure de début
+            {t("events.startsLabel")}
           </label>
           <Input name="startsAt" type="datetime-local" />
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-medium text-zinc-500">
-            Checklist consignes
+            {t("events.checklistLabel")}
           </label>
           <select name="checklistId" className={selectClassName} defaultValue="">
-            <option value="">
-              — Aucune (consignes vides, à compléter sur la fiche) —
-            </option>
+            <option value="">{t("events.checklistNone")}</option>
             {checklists.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -55,19 +75,18 @@ export function CreateEventForm({
             ))}
           </select>
           <p className="mt-2 text-xs text-zinc-500">
-            Les modèles sont gérés dans{" "}
+            {t("events.checklistHelpBefore")}{" "}
             <Link
               href="/dashboard/checklists"
               className="font-medium text-zinc-800 underline"
             >
-              Checklists
+              {t("events.checklistHelpLink")}
             </Link>
-            . Le contenu est copié dans l’événement : vous pourrez le modifier
-            ensuite dans l’onglet Consignes.
+            {t("events.checklistHelpAfter")}
           </p>
         </div>
-        <SubmitButton className="w-full" pendingLabel="Création…">
-          Créer et ouvrir la fiche
+        <SubmitButton className="w-full" pendingLabel={t("events.creating")}>
+          {t("events.createSubmit")}
         </SubmitButton>
       </form>
     </Card>

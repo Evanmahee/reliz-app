@@ -6,6 +6,7 @@ import { GUEST_REQUEST } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/i18n/i18n-provider";
 
 type MenuItem = {
   id: string;
@@ -16,8 +17,6 @@ type MenuItem = {
 
 type Tab = "carte" | "services" | "personnel";
 
-const serviceIdeas = ["Verres", "Couverts", "Serviettes", "Eau", "Pain"];
-
 export function GuestApp({
   publicSlug,
   eventName,
@@ -27,6 +26,10 @@ export function GuestApp({
   eventName: string;
   menuItems: MenuItem[];
 }) {
+  const { t, messages } = useT();
+  const serviceIdeas = messages.guest
+    .serviceIdeas as unknown as readonly string[];
+
   const storageKey = `reliz_table_${publicSlug}`;
   const [hydrated, setHydrated] = useState(false);
   const [tableNumber, setTableNumber] = useState<string | null>(null);
@@ -49,7 +52,7 @@ export function GuestApp({
     e.preventDefault();
     const v = tableDraft.trim();
     if (!v) {
-      setError("Indiquez le numéro de votre table.");
+      setError(t("guest.tableError"));
       return;
     }
     sessionStorage.setItem(storageKey, v);
@@ -84,19 +87,19 @@ export function GuestApp({
           setError(res.error);
           return;
         }
-        flash("Demande envoyée.");
+        flash(t("guest.requestSent"));
         setProductNote("");
         setSelectedProduct(null);
         setServiceText("");
       });
     },
-    [publicSlug, tableNumber],
+    [publicSlug, tableNumber, t],
   );
 
   if (!hydrated) {
     return (
       <div className="rounded-[1.75rem] border border-zinc-200 bg-white px-6 py-10 text-center text-sm text-zinc-500">
-        Chargement…
+        {t("guest.loading")}
       </div>
     );
   }
@@ -107,18 +110,15 @@ export function GuestApp({
         <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
           {eventName}
         </h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Scannez le QR fourni par l’organisateur, puis indiquez votre numéro
-          de table pour accéder au service.
-        </p>
+        <p className="mt-2 text-sm text-zinc-500">{t("guest.intro")}</p>
         <form onSubmit={saveTable} className="mt-6 space-y-4">
           <div>
             <label className="mb-1.5 block text-xs font-medium text-zinc-500">
-              Numéro de table
+              {t("guest.tableLabel")}
             </label>
             <Input
               inputMode="numeric"
-              placeholder="Ex. 12"
+              placeholder={t("guest.tablePlaceholder")}
               value={tableDraft}
               onChange={(e) => setTableDraft(e.target.value)}
               autoComplete="off"
@@ -126,25 +126,29 @@ export function GuestApp({
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <Button type="submit" className="w-full">
-            Continuer
+            {t("guest.continue")}
           </Button>
         </form>
       </div>
     );
   }
 
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "carte", label: t("guest.tabMenu") },
+    { id: "services", label: t("guest.tabService") },
+    { id: "personnel", label: t("guest.tabStaff") },
+  ];
+
   return (
     <div className="space-y-6">
       <header className="rounded-[1.75rem] border border-zinc-200 bg-white px-5 py-5">
-        <p className="text-xs font-medium text-zinc-500">
-          Événement
-        </p>
+        <p className="text-xs font-medium text-zinc-500">{t("guest.eventLabel")}</p>
         <h1 className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">
           {eventName}
         </h1>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-violet-100/80 px-3 py-1 text-xs font-medium text-zinc-800">
-            Table {tableNumber}
+            {t("guest.tableBadge")} {tableNumber}
           </span>
           <Button
             type="button"
@@ -152,7 +156,7 @@ export function GuestApp({
             className="text-xs"
             onClick={clearTable}
           >
-            Changer de table
+            {t("guest.changeTable")}
           </Button>
         </div>
         {feedback ? (
@@ -162,13 +166,7 @@ export function GuestApp({
       </header>
 
       <div className="flex gap-1 rounded-[1.35rem] border border-zinc-200 bg-zinc-50/80 p-1">
-        {(
-          [
-            ["carte", "Carte"],
-            ["services", "Services"],
-            ["personnel", "À table"],
-          ] as const
-        ).map(([id, label]) => (
+        {tabs.map(({ id, label }) => (
           <button
             key={id}
             type="button"
@@ -186,11 +184,11 @@ export function GuestApp({
 
       {tab === "carte" ? (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-900">Carte</h2>
+          <h2 className="text-sm font-semibold text-zinc-900">{t("guest.menuTitle")}</h2>
           <ul className="space-y-3">
             {menuItems.length === 0 ? (
               <li className="rounded-[1.35rem] border border-zinc-100 bg-white px-4 py-6 text-center text-sm text-zinc-500">
-                La carte sera bientôt disponible.
+                {t("guest.menuEmpty")}
               </li>
             ) : (
               menuItems.map((item) => (
@@ -209,7 +207,7 @@ export function GuestApp({
                     </div>
                     {item.outOfStock ? (
                       <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-900">
-                        Rupture de stock
+                        {t("guest.outOfStock")}
                       </span>
                     ) : (
                       <Button
@@ -221,7 +219,7 @@ export function GuestApp({
                           setProductNote("");
                         }}
                       >
-                        Commander
+                        {t("guest.order")}
                       </Button>
                     )}
                   </div>
@@ -237,13 +235,13 @@ export function GuestApp({
                   {selectedProduct.name}
                 </p>
                 <label className="mt-3 block text-xs font-medium text-zinc-500">
-                  Précision (optionnel)
+                  {t("guest.precision")}
                 </label>
                 <Input
                   className="mt-1"
                   value={productNote}
                   onChange={(e) => setProductNote(e.target.value)}
-                  placeholder="Allergie, quantité…"
+                  placeholder={t("guest.precisionPh")}
                 />
                 <div className="mt-5 flex gap-2">
                   <Button
@@ -252,7 +250,7 @@ export function GuestApp({
                     className="flex-1"
                     onClick={() => setSelectedProduct(null)}
                   >
-                    Annuler
+                    {t("guest.cancel")}
                   </Button>
                   <Button
                     type="button"
@@ -276,13 +274,13 @@ export function GuestApp({
                           setError(res.error);
                           return;
                         }
-                        flash("Demande envoyée.");
+                        flash(t("guest.requestSent"));
                         setProductNote("");
                         setSelectedProduct(null);
                       });
                     }}
                   >
-                    Envoyer
+                    {t("guest.send")}
                   </Button>
                 </div>
               </div>
@@ -294,18 +292,16 @@ export function GuestApp({
       {tab === "services" ? (
         <section className="rounded-[1.75rem] border border-zinc-100 bg-white px-4 py-5 space-y-4">
           <h2 className="text-sm font-semibold text-zinc-900">
-            Demande de service
+            {t("guest.serviceTitle")}
           </h2>
-          <p className="text-xs text-zinc-500">Suggestions rapides :</p>
+          <p className="text-xs text-zinc-500">{t("guest.serviceSuggestions")}</p>
           <div className="flex flex-wrap gap-2">
             {serviceIdeas.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() =>
-                  setServiceText((prev) =>
-                    prev ? `${prev}, ${s}` : s,
-                  )
+                  setServiceText((prev) => (prev ? `${prev}, ${s}` : s))
                 }
                 className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100"
               >
@@ -316,28 +312,24 @@ export function GuestApp({
           <Textarea
             value={serviceText}
             onChange={(e) => setServiceText(e.target.value)}
-            placeholder="Décrivez ce dont vous avez besoin…"
+            placeholder={t("guest.servicePh")}
           />
           <Button
             type="button"
             className="w-full"
             disabled={pending || !serviceText.trim()}
-            onClick={() =>
-              send(GUEST_REQUEST.SERVICE, serviceText.trim())
-            }
+            onClick={() => send(GUEST_REQUEST.SERVICE, serviceText.trim())}
           >
-            Envoyer la demande
+            {t("guest.sendRequest")}
           </Button>
         </section>
       ) : null}
 
       {tab === "personnel" ? (
         <section className="rounded-[1.75rem] border border-zinc-100 bg-white px-4 py-8 text-center space-y-4">
-          <h2 className="text-sm font-semibold text-zinc-900">
-            Besoin d’un membre de l’équipe ?
-          </h2>
+          <h2 className="text-sm font-semibold text-zinc-900">{t("guest.staffTitle")}</h2>
           <p className="text-sm text-zinc-500">
-            Nous enverrons quelqu’un à la table {tableNumber}.
+            {t("guest.staffBody").replace("{table}", tableNumber)}
           </p>
           <Button
             type="button"
@@ -346,11 +338,11 @@ export function GuestApp({
             onClick={() =>
               send(
                 GUEST_REQUEST.STAFF,
-                `Intervention demandée à la table ${tableNumber}.`,
+                t("guest.staffMessage").replace("{table}", tableNumber),
               )
             }
           >
-            Appeler du personnel
+            {t("guest.staffButton")}
           </Button>
         </section>
       ) : null}

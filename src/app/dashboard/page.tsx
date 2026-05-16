@@ -9,8 +9,11 @@ import {
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { EventLiveCard } from "@/components/dashboard/event-live-card";
 import { Card } from "@/components/ui/card";
 import { primaryButtonClassName } from "@/components/ui/button";
+import { dateLocaleTag } from "@/i18n/date-locale";
+import { getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,14 +21,17 @@ type RecentGuestRequest = Prisma.GuestRequestGetPayload<{
   include: { event: { select: { id: true; name: true } } };
 }>;
 
-function typeLabel(t: string) {
-  if (t === "PRODUCT") return "Commande";
-  if (t === "SERVICE") return "Service";
-  if (t === "STAFF") return "Personnel";
-  return t;
-}
-
 export default async function DashboardHomePage() {
+  const { t, locale } = await getT();
+  const dateTag = dateLocaleTag(locale);
+
+  function typeLabel(typ: string) {
+    if (typ === "PRODUCT") return t("dashboard.order");
+    if (typ === "SERVICE") return t("dashboard.service");
+    if (typ === "STAFF") return t("dashboard.staff");
+    return typ;
+  }
+
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
 
@@ -92,20 +98,17 @@ export default async function DashboardHomePage() {
     <div className="mx-auto max-w-5xl space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-medium text-zinc-400">Dashboard</p>
+          <p className="text-xs font-medium text-zinc-400">{t("dashboard.tag")}</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">
-            Événements en cours
+            {t("dashboard.title")}
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-zinc-500">
-            Ouvrez une fiche pour la carte, les consignes, le QR et les demandes
-            des tables.
-          </p>
+          <p className="mt-2 max-w-xl text-sm text-zinc-500">{t("dashboard.subtitle")}</p>
         </div>
         <Link
           href="/dashboard/evenements/nouveau"
           className={`${primaryButtonClassName} shrink-0`}
         >
-          Nouvel événement
+          {t("dashboard.newEvent")}
         </Link>
       </div>
 
@@ -113,20 +116,20 @@ export default async function DashboardHomePage() {
         <section className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-zinc-900">
-              Notifications
+              {t("dashboard.notifications")}
             </h2>
             {pendingNotif > 0 ? (
               <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-900">
-                {pendingNotif} à traiter
+                {pendingNotif} {t("dashboard.toProcess")}
               </span>
             ) : (
-              <span className="text-xs text-zinc-400">Rien en attente</span>
+              <span className="text-xs text-zinc-400">{t("dashboard.nothingPending")}</span>
             )}
           </div>
           <Card className="overflow-hidden px-0 py-0">
             {recentRequests.length === 0 ? (
               <p className="px-5 py-8 text-center text-sm text-zinc-500">
-                Aucune demande invité pour vos événements actifs.
+                {t("dashboard.noRequests")}
               </p>
             ) : (
               <ul className="divide-y divide-zinc-100">
@@ -138,7 +141,7 @@ export default async function DashboardHomePage() {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-xs text-zinc-400">
-                          {new Date(r.createdAt).toLocaleString("fr-FR", {
+                          {new Date(r.createdAt).toLocaleString(dateTag, {
                             dateStyle: "short",
                             timeStyle: "short",
                           })}
@@ -147,7 +150,7 @@ export default async function DashboardHomePage() {
                             {r.event.name}
                           </span>
                           <span className="text-zinc-300"> · </span>
-                          Table {r.tableNumber}
+                          {t("dashboard.table")} {r.tableNumber}
                         </p>
                         <p className="mt-1 text-sm font-medium text-zinc-900">
                           {typeLabel(r.type)}
@@ -159,15 +162,15 @@ export default async function DashboardHomePage() {
                       <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
                         {r.status === "PENDING" ? (
                           <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-900">
-                            Nouveau
+                            {t("dashboard.newBadge")}
                           </span>
                         ) : (
                           <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                            Traité
+                            {t("dashboard.doneBadge")}
                           </span>
                         )}
                         <span className="hidden text-[11px] font-medium text-violet-600 sm:inline">
-                          Ouvrir →
+                          {t("dashboard.open")}
                         </span>
                       </div>
                     </Link>
@@ -181,49 +184,27 @@ export default async function DashboardHomePage() {
 
       {count === 0 ? (
         <Card className="px-6 py-14 text-center">
-          <p className="text-sm font-medium text-zinc-900">
-            Aucun événement en cours
-          </p>
-          <p className="mt-2 text-sm text-zinc-500">
-            Créez un événement pour générer un QR code et recevoir les demandes
-            des tables.
-          </p>
+          <p className="text-sm font-medium text-zinc-900">{t("dashboard.noEvents")}</p>
+          <p className="mt-2 text-sm text-zinc-500">{t("dashboard.noEventsHint")}</p>
           <Link
             href="/dashboard/evenements/nouveau"
             className={`${primaryButtonClassName} mx-auto mt-6 inline-flex`}
           >
-            Créer un événement
+            {t("dashboard.createEvent")}
           </Link>
         </Card>
       ) : (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-900">Vos événements</h2>
+          <h2 className="text-sm font-semibold text-zinc-900">{t("dashboard.yourEvents")}</h2>
           <ul className="grid gap-4 sm:grid-cols-2">
             {events.map((e) => (
               <li key={e.id}>
-                <Link href={`/dashboard/evenements/${e.id}`}>
-                  <Card className="h-full px-5 py-5 transition-colors hover:border-zinc-300 hover:bg-zinc-50/50">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold text-zinc-900">
-                        {e.name}
-                      </p>
-                      <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                        En cours
-                      </span>
-                    </div>
-                    {e.venue ? (
-                      <p className="mt-1 text-xs text-zinc-500">{e.venue}</p>
-                    ) : null}
-                    <p className="mt-3 text-xs text-zinc-400">
-                      {e.startsAt
-                        ? new Date(e.startsAt).toLocaleString("fr-FR", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })
-                        : "Date à confirmer"}
-                    </p>
-                  </Card>
-                </Link>
+                <EventLiveCard
+                  id={e.id}
+                  name={e.name}
+                  venue={e.venue}
+                  startsAtIso={e.startsAt?.toISOString() ?? null}
+                />
               </li>
             ))}
           </ul>

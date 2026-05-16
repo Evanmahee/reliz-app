@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { archiveEventAction, deleteEventAction } from "@/app/actions/events";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/i18n-provider";
 
 function IconFolder({ className }: { className?: string }) {
   return (
@@ -69,6 +70,7 @@ export function EventMoreMenu({
   eventId: string;
   archived: boolean;
 }) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -91,11 +93,7 @@ export function EventMoreMenu({
   }, [open]);
 
   function archive() {
-    if (
-      !confirm(
-        "Archiver cet événement ? Il disparaîtra de la liste active et le QR ne sera plus utilisable côté client.",
-      )
-    ) {
+    if (!confirm(t("events.archiveConfirm"))) {
       return;
     }
     setOpen(false);
@@ -105,11 +103,7 @@ export function EventMoreMenu({
   }
 
   function remove() {
-    if (
-      !confirm(
-        "Supprimer définitivement cet événement, la carte et l’historique des demandes ?",
-      )
-    ) {
+    if (!confirm(t("events.deleteConfirm"))) {
       return;
     }
     setOpen(false);
@@ -132,7 +126,7 @@ export function EventMoreMenu({
         className="gap-2"
       >
         <IconMore className="text-zinc-700" />
-        Plus
+        {t("events.more")}
       </Button>
 
       {open ? (
@@ -151,7 +145,7 @@ export function EventMoreMenu({
               className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-zinc-950 hover:bg-zinc-50"
             >
               <IconFolder className="shrink-0 text-zinc-950" />
-              Archiver
+              {t("events.archive")}
             </button>
           ) : null}
           <button
@@ -164,7 +158,7 @@ export function EventMoreMenu({
             }`}
           >
             <IconTrash className="shrink-0 text-red-600" />
-            Supprimer
+            {t("events.delete")}
           </button>
         </div>
       ) : null}

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/i18n/i18n-provider";
 
 export function InstructionBlocksEditor({
   initialBlocks,
@@ -20,8 +21,8 @@ export function InstructionBlocksEditor({
   toggleCheckboxAction,
   submitLabel,
   submitSuccessMessage,
-  submitErrorMessage = "Impossible d’enregistrer.",
-  checkboxSavedMessage = "Modification enregistrée",
+  submitErrorMessage,
+  checkboxSavedMessage,
 }: {
   initialBlocks: InstructionBlock[];
   entityIdFieldName: string;
@@ -38,6 +39,12 @@ export function InstructionBlocksEditor({
   submitErrorMessage?: string;
   checkboxSavedMessage?: string;
 }) {
+  const { t } = useT();
+  const resolvedSubmitError =
+    submitErrorMessage ?? t("instructionEditor.submitError");
+  const resolvedCheckboxSaved =
+    checkboxSavedMessage ?? t("checklists.checkboxSaved");
+
   const [checkboxPending, startCheckbox] = useTransition();
   const [blocks, setBlocks] = useState<InstructionBlock[]>(initialBlocks);
 
@@ -54,10 +61,10 @@ export function InstructionBlocksEditor({
       } catch (err) {
         if (isNextRedirectError(err)) throw err;
         console.error(err);
-        toast.error(submitErrorMessage);
+        toast.error(resolvedSubmitError);
       }
     },
-    [formAction, submitSuccessMessage, submitErrorMessage],
+    [formAction, submitSuccessMessage, resolvedSubmitError],
   );
 
   function addParagraph() {
@@ -108,13 +115,13 @@ export function InstructionBlocksEditor({
     startCheckbox(async () => {
       try {
         await toggleCheckboxAction(entityId, id, checked);
-        toast.success(checkboxSavedMessage, {
+        toast.success(resolvedCheckboxSaved, {
           id: "instruction-checkbox-save",
           duration: 2000,
         });
       } catch (err) {
         if (isNextRedirectError(err)) throw err;
-        toast.error("Échec de l’enregistrement de la case.");
+        toast.error(t("instructionEditor.checkboxSaveFailed"));
       }
     });
   }
@@ -137,7 +144,7 @@ export function InstructionBlocksEditor({
           disabled={checkboxPending}
         >
           <MdAdd className="size-4" aria-hidden />
-          Bloc texte
+          {t("instructionEditor.addText")}
         </Button>
         <Button
           type="button"
@@ -147,7 +154,7 @@ export function InstructionBlocksEditor({
           disabled={checkboxPending}
         >
           <MdAdd className="size-4" aria-hidden />
-          Case à cocher
+          {t("instructionEditor.addCheckbox")}
         </Button>
       </div>
 
@@ -160,15 +167,15 @@ export function InstructionBlocksEditor({
             <div className="flex items-start justify-between gap-2">
               <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                 {b.type === "paragraph"
-                  ? `Texte ${index + 1}`
-                  : `Tâche ${index + 1}`}
+                  ? `${t("instructionEditor.textBlock")} ${index + 1}`
+                  : `${t("instructionEditor.taskBlock")} ${index + 1}`}
               </span>
               <button
                 type="button"
                 onClick={() => removeBlock(b.id)}
                 disabled={checkboxPending}
                 className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 disabled:opacity-40"
-                aria-label="Retirer ce bloc"
+                aria-label={t("instructionEditor.removeBlock")}
               >
                 <MdClose className="size-4" />
               </button>
@@ -177,7 +184,7 @@ export function InstructionBlocksEditor({
               <Textarea
                 value={b.content}
                 onChange={(e) => updateParagraph(b.id, e.target.value)}
-                placeholder="Consigne libre…"
+                placeholder={t("instructionEditor.paragraphPh")}
                 className="mt-2 min-h-[88px]"
                 disabled={checkboxPending}
               />
@@ -191,14 +198,14 @@ export function InstructionBlocksEditor({
                   }
                   disabled={checkboxPending}
                   className="mt-2 size-4 shrink-0 rounded border-zinc-300 accent-zinc-900"
-                  aria-label="Cocher la tâche"
+                  aria-label={t("instructionEditor.checkboxAria")}
                 />
                 <Input
                   value={b.label}
                   onChange={(e) =>
                     updateCheckboxLabel(b.id, e.target.value)
                   }
-                  placeholder="Intitulé de la case…"
+                  placeholder={t("instructionEditor.checkboxPh")}
                   className="flex-1"
                   disabled={checkboxPending}
                 />
@@ -208,7 +215,7 @@ export function InstructionBlocksEditor({
         ))}
       </ul>
 
-      <SubmitButton variant="outline" pendingLabel="Enregistrement…">
+      <SubmitButton variant="outline" pendingLabel={t("instructionEditor.submitPending")}>
         {submitLabel}
       </SubmitButton>
     </form>

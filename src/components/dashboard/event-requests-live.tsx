@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { markRequestDoneFormAction } from "@/app/actions/events";
 import { Button } from "@/components/ui/button";
 import { wrapFormActionWithToast } from "@/components/ui/form-action-toast";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { dateLocaleTag } from "@/i18n/date-locale";
+import { useT } from "@/i18n/i18n-provider";
 
 type Row = {
   id: string;
@@ -15,17 +17,20 @@ type Row = {
   createdAt: string;
 };
 
-function typeLabel(t: string) {
-  if (t === "PRODUCT") return "Commande";
-  if (t === "SERVICE") return "Service";
-  if (t === "STAFF") return "Personnel";
-  return t;
-}
-
 export function EventRequestsLive({ eventId }: { eventId: string }) {
+  const { t, locale } = useT();
+  const tRef = useRef(t);
+  tRef.current = t;
   const [rows, setRows] = useState<Row[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+
+  function typeLabel(typ: string) {
+    if (typ === "PRODUCT") return t("dashboard.order");
+    if (typ === "SERVICE") return t("dashboard.service");
+    if (typ === "STAFF") return t("dashboard.staff");
+    return typ;
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +40,7 @@ export function EventRequestsLive({ eventId }: { eventId: string }) {
           cache: "no-store",
         });
         if (!res.ok) {
-          if (!cancelled) setErr("Impossible de charger les demandes.");
+          if (!cancelled) setErr(tRef.current("events.requests.loadError"));
           return;
         }
         const data = (await res.json()) as Row[];
@@ -44,7 +49,7 @@ export function EventRequestsLive({ eventId }: { eventId: string }) {
           setRows(data);
         }
       } catch {
-        if (!cancelled) setErr("Réseau indisponible.");
+        if (!cancelled) setErr(tRef.current("events.requests.networkError"));
       }
     }
     load();
@@ -59,12 +64,27 @@ export function EventRequestsLive({ eventId }: { eventId: string }) {
   const done = rows.filter((r) => r.status === "DONE");
   const displayRows = showHistory ? done : pending;
 
+  const historyLabel =
+    showHistory
+      ? t("events.requests.backPending")
+      : done.length > 0
+        ? t("events.requests.historyWithCount").replace(
+            "{n}",
+            String(done.length),
+          )
+        : t("events.requests.history");
+
+  const doneCountLabel =
+    done.length === 1
+      ? `1 ${t("events.requests.treated")}`
+      : `${done.length} ${t("events.requests.treatedPlural")}`;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
           <h2 className="text-lg font-semibold text-zinc-900">
-            Demandes invités
+            {t("events.requests.title")}
           </h2>
           <Button
             type="button"
@@ -72,26 +92,22 @@ export function EventRequestsLive({ eventId }: { eventId: string }) {
             className="shrink-0 px-3 py-1.5 text-xs font-medium"
             onClick={() => setShowHistory((v) => !v)}
           >
-            {showHistory
-              ? "← Attentes"
-              : `Historique${done.length > 0 ? ` (${done.length})` : ""}`}
+            {historyLabel}
           </Button>
         </div>
         {!showHistory ? (
           <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-            {pending.length} en attente
+            {pending.length} {t("events.requests.pending")}
           </span>
         ) : (
           <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-            {done.length} traitée{done.length !== 1 ? "s" : ""}
+            {doneCountLabel}
           </span>
         )}
       </div>
 
       {showHistory ? (
-        <p className="text-xs text-zinc-500">
-          Demandes marquées comme traitées, les plus récentes en premier.
-        </p>
+        <p className="text-xs text-zinc-500">{t("events.requests.historyHint")}</p>
       ) : null}
 
       {err ? (
@@ -99,8 +115,8 @@ export function EventRequestsLive({ eventId }: { eventId: string }) {
       ) : displayRows.length === 0 ? (
         <p className="text-sm text-zinc-500">
           {showHistory
-            ? "Aucune demande dans l’historique pour le moment."
-            : "Aucune demande en attente."}
+            ? t("events.requests.noHistory")
+            : t("events.requests.noPending")}
         </p>
       ) : (
         <ul className="divide-y divide-zinc-100 rounded-[1.35rem] border border-zinc-100 bg-zinc-50/40">
@@ -111,12 +127,12 @@ export function EventRequestsLive({ eventId }: { eventId: string }) {
             >
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-zinc-400">
-                  {new Date(r.createdAt).toLocaleString("fr-FR", {
+                  {new Date(r.createdAt).toLocaleString(dateLocaleTag(locale), {
                     dateStyle: "short",
                     timeStyle: "short",
                   })}
                   {" · "}
-                  Table {r.tableNumber}
+                  {t("dashboard.table")} {r.tableNumber}
                 </p>
                 <p className="text-sm font-medium text-zinc-900">
                   {typeLabel(r.type)}
@@ -126,18 +142,18 @@ export function EventRequestsLive({ eventId }: { eventId: string }) {
               <div className="flex shrink-0 items-center gap-2">
                 {r.status === "DONE" ? (
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                    Traité
+                    {t("dashboard.doneBadge")}
                   </span>
                 ) : (
                   <form
                     action={wrapFormActionWithToast(markRequestDoneFormAction, {
-                      success: "Demande marquée comme traitée",
+                      success: t("events.requests.toastDone"),
                     })}
                   >
                     <input type="hidden" name="requestId" value={r.id} />
                     <input type="hidden" name="eventId" value={eventId} />
                     <SubmitButton variant="outline" className="text-xs" pendingLabel="…">
-                      Marquer traité
+                      {t("events.requests.markDone")}
                     </SubmitButton>
                   </form>
                 )}

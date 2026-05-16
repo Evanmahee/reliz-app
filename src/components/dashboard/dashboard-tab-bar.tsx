@@ -6,21 +6,17 @@ import {
   DASHBOARD_NAV_ITEMS,
   isDashboardNavActive,
 } from "@/lib/dashboard-nav";
+import { useT } from "@/i18n/i18n-provider";
 import { MaterialSymbol } from "@/components/ui/material-symbol";
-
-function shortLabel(label: string) {
-  if (label === "Paramètres") return "Réglages";
-  if (label === "Checklists") return "Listes";
-  return label;
-}
 
 export function DashboardTabBar() {
   const pathname = usePathname();
+  const { t } = useT();
 
   return (
     <nav
       className="md3-nav-bar fixed inset-x-0 bottom-0 z-50 lg:hidden"
-      aria-label="Navigation principale"
+      aria-label={t("nav.mainNavAria")}
     >
       <ul className="mx-auto flex h-20 max-w-lg items-stretch justify-around px-2">
         {DASHBOARD_NAV_ITEMS.map((item) => {
@@ -58,7 +54,7 @@ export function DashboardTabBar() {
                       : "font-medium text-[var(--md3-on-surface-variant)]"
                   }`}
                 >
-                  {shortLabel(item.label)}
+                  {t(item.shortLabelKey)}
                 </span>
               </Link>
             </li>

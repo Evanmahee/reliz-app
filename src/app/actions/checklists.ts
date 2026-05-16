@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
+import { isNextRedirectError } from "@/lib/is-next-redirect-error";
 import {
   ensureBlocksDraft,
   parseInstructionsBlocks,
@@ -12,6 +13,7 @@ import {
   INSTRUCTIONS_MAX_BLOCKS,
 } from "@/lib/instructions-blocks";
 import { prisma } from "@/lib/prisma";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 async function requireOwner() {
   const userId = await getSessionUserId();
@@ -36,15 +38,49 @@ export async function createChecklistAction(formData: FormData) {
   const initialBlocks = [
     { type: "paragraph" as const, id: nanoid(), content: "" },
   ];
-  const cl = await prisma.checklist.create({
-    data: {
-      name,
-      ownerId: userId,
-      blocks: initialBlocks as unknown as Prisma.InputJsonValue,
-    },
-  });
-  revalidatePath("/dashboard/checklists");
-  redirect(`/dashboard/checklists/${cl.id}`);
+  const clientChecklistId = String(formData.get("clientChecklistId") ?? "").trim();
+  const useClientId =
+    clientChecklistId.length >= 12 &&
+    clientChecklistId.length <= 36 &&
+    /^[a-zA-Z0-9_-]+$/.test(clientChecklistId);
+
+  try {
+    const cl = await prisma.checklist.create({
+      data: {
+        ...(useClientId ? { id: clientChecklistId } : {}),
+        name,
+        ownerId: userId,
+        blocks: initialBlocks as unknown as Prisma.InputJsonValue,
+      },
+    });
+    revalidatePath("/dashboard/checklists");
+    redirect(`/dashboard/checklists/${cl.id}`);
+  } catch (e) {
+    if (isNextRedirectError(e)) throw e;
+    if (
+      e instanceof PrismaClientKnownRequestError &&
+      e.code === "P2002" &&
+      useClientId
+    ) {
+      const rawTarget = (e.meta as { target?: string | string[] } | undefined)
+        ?.target;
+      const target = Array.isArray(rawTarget)
+        ? rawTarget
+        : rawTarget
+          ? [rawTarget]
+          : [];
+      if (target.includes("id")) {
+        const existing = await prisma.checklist.findFirst({
+          where: { id: clientChecklistId, ownerId: userId },
+        });
+        if (existing) {
+          revalidatePath("/dashboard/checklists");
+          redirect(`/dashboard/checklists/${existing.id}`);
+        }
+      }
+    }
+    throw e;
+  }
 }
 
 export async function updateChecklistNameAction(formData: FormData) {

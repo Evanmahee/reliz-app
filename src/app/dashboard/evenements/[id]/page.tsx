@@ -10,12 +10,14 @@ import { EventMoreMenu } from "@/components/dashboard/event-more-menu";
 import { EventRequestsLive } from "@/components/dashboard/event-requests-live";
 import { outlineButtonClassName } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getT } from "@/i18n/server";
 
 export default async function EventDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { t } = await getT();
   const { id } = await params;
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
@@ -35,24 +37,24 @@ export default async function EventDetailPage({
     event.instructions,
   );
 
+  const backLabel = archived ? t("events.backToHistory") : t("events.backToEvents");
+
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-16">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Link
-            href={
-              archived ? "/dashboard/historique" : "/dashboard/evenements"
-            }
+            href={archived ? "/dashboard/historique" : "/dashboard/evenements"}
             className={outlineButtonClassName}
           >
-            ← {archived ? "Historique" : "Événements"}
+            {backLabel}
           </Link>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-900">
             {event.name}
           </h1>
           {archived ? (
             <span className="mt-2 inline-block rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700">
-              Archivé
+              {t("events.archivedBadge")}
             </span>
           ) : null}
         </div>

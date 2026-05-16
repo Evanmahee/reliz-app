@@ -4,12 +4,14 @@ import { CreateEventForm } from "@/components/dashboard/create-event-form";
 import { outlineButtonClassName } from "@/components/ui/button";
 import { getSessionUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/i18n/server";
 
 export default async function NouvelEvenementPage({
   searchParams,
 }: {
   searchParams: Promise<{ erreur?: string }>;
 }) {
+  const { t } = await getT();
   const sp = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
@@ -23,15 +25,12 @@ export default async function NouvelEvenementPage({
   return (
     <div className="mx-auto max-w-xl space-y-8">
       <div>
-        <Link
-          href="/dashboard/evenements"
-          className={outlineButtonClassName}
-        >
-          ← Retour aux événements
+        <Link href="/dashboard/evenements" className={outlineButtonClassName}>
+          {t("events.newBack")}
         </Link>
-        <p className="mt-5 text-xs font-medium text-zinc-400">Nouveau</p>
+        <p className="mt-5 text-xs font-medium text-zinc-400">{t("events.newTag")}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">
-          Créer un événement
+          {t("events.newTitle")}
         </h1>
       </div>
 

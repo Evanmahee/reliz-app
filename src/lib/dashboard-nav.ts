@@ -1,16 +1,44 @@
 export type DashboardNavItem = {
   href: string;
-  label: string;
+  /** Clé i18n pour le libellé (ex. nav.dashboard) */
+  labelKey: string;
+  /** Libellé court (barre du bas) */
+  shortLabelKey: string;
   /** Nom Material Symbols Rounded — https://fonts.google.com/icons */
   icon: string;
 };
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "space_dashboard" },
-  { href: "/dashboard/evenements", label: "Événements", icon: "event" },
-  { href: "/dashboard/checklists", label: "Checklists", icon: "checklist" },
-  { href: "/dashboard/historique", label: "Historique", icon: "history" },
-  { href: "/dashboard/parametres", label: "Paramètres", icon: "settings" },
+  {
+    href: "/dashboard",
+    labelKey: "nav.dashboard",
+    shortLabelKey: "nav.dashboard",
+    icon: "space_dashboard",
+  },
+  {
+    href: "/dashboard/evenements",
+    labelKey: "nav.events",
+    shortLabelKey: "nav.events",
+    icon: "event",
+  },
+  {
+    href: "/dashboard/checklists",
+    labelKey: "nav.checklists",
+    shortLabelKey: "nav.shortChecklists",
+    icon: "checklist",
+  },
+  {
+    href: "/dashboard/historique",
+    labelKey: "nav.history",
+    shortLabelKey: "nav.history",
+    icon: "history",
+  },
+  {
+    href: "/dashboard/parametres",
+    labelKey: "nav.settings",
+    shortLabelKey: "nav.shortSettings",
+    icon: "settings",
+  },
 ];
 
 export function isDashboardNavActive(pathname: string, href: string) {

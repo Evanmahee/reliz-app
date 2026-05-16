@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { EVENT_STATUS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/i18n/server";
 
 export async function submitGuestRequest(input: {
   publicSlug: string;
@@ -10,20 +11,21 @@ export async function submitGuestRequest(input: {
   type: string;
   message: string;
 }) {
+  const { t } = await getT();
   const event = await prisma.event.findUnique({
     where: { publicSlug: input.publicSlug },
     select: { id: true, status: true },
   });
   if (!event || event.status !== EVENT_STATUS.LIVE) {
-    return { ok: false as const, error: "Événement indisponible" };
+    return { ok: false as const, error: t("guest.errors.unavailable") };
   }
   const tableNumber = input.tableNumber.trim();
   if (!tableNumber) {
-    return { ok: false as const, error: "Indiquez votre numéro de table." };
+    return { ok: false as const, error: t("guest.errors.tableRequired") };
   }
   const message = input.message.trim();
   if (!message) {
-    return { ok: false as const, error: "Précisez votre demande." };
+    return { ok: false as const, error: t("guest.errors.messageRequired") };
   }
   await prisma.guestRequest.create({
     data: {

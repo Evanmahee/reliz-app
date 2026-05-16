@@ -5,6 +5,7 @@ import {
   updateChecklistBlocksAction,
 } from "@/app/actions/checklists";
 import { InstructionBlocksEditor } from "@/components/dashboard/instruction-blocks-editor";
+import { useT } from "@/i18n/i18n-provider";
 import type { InstructionBlock } from "@/lib/instructions-blocks";
 
 export function ChecklistBlocksEditor({
@@ -14,6 +15,7 @@ export function ChecklistBlocksEditor({
   checklistId: string;
   initialBlocks: InstructionBlock[];
 }) {
+  const { t } = useT();
   return (
     <InstructionBlocksEditor
       initialBlocks={initialBlocks}
@@ -22,9 +24,8 @@ export function ChecklistBlocksEditor({
       payloadFieldName="blocksPayload"
       formAction={updateChecklistBlocksAction}
       toggleCheckboxAction={toggleChecklistCheckboxAction}
-      submitLabel="Enregistrer la checklist"
-      submitSuccessMessage="Checklist enregistrée"
-      checkboxSavedMessage="Case mise à jour"
+      submitLabel={t("checklists.saveChecklist")}
+      submitSuccessMessage={t("checklists.toastChecklist")}
     />
   );
 }
