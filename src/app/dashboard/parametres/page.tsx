@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/actions/auth";
-import { updatePasswordAction } from "@/app/actions/settings";
+import { PasswordChangeForm } from "@/components/dashboard/password-change-form";
 import { getSessionUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 export default async function ParametresPage({
   searchParams,
@@ -69,23 +68,7 @@ export default async function ParametresPage({
             Le nouveau mot de passe doit contenir au moins 8 caractères.
           </p>
         ) : null}
-        <form action={updatePasswordAction} className="mt-4 space-y-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-500">
-              Mot de passe actuel
-            </label>
-            <Input name="current" type="password" required autoComplete="current-password" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-500">
-              Nouveau mot de passe
-            </label>
-            <Input name="next" type="password" required minLength={8} autoComplete="new-password" />
-          </div>
-          <Button type="submit" variant="outline">
-            Mettre à jour
-          </Button>
-        </form>
+        <PasswordChangeForm />
       </Card>
 
       <p className="text-center text-xs text-zinc-400">

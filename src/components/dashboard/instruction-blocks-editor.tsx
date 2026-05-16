@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { MdAdd, MdClose } from "react-icons/md";
+import { toast } from "sonner";
 import { nanoid } from "nanoid";
 import type { InstructionBlock } from "@/lib/instructions-blocks";
+import { isNextRedirectError } from "@/lib/is-next-redirect-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 
 export function InstructionBlocksEditor({
@@ -16,6 +19,9 @@ export function InstructionBlocksEditor({
   formAction,
   toggleCheckboxAction,
   submitLabel,
+  submitSuccessMessage,
+  submitErrorMessage = "Impossible d’enregistrer.",
+  checkboxSavedMessage = "Modification enregistrée",
 }: {
   initialBlocks: InstructionBlock[];
   entityIdFieldName: string;
@@ -28,14 +34,31 @@ export function InstructionBlocksEditor({
     checked: boolean,
   ) => void | Promise<void>;
   submitLabel: string;
+  submitSuccessMessage: string;
+  submitErrorMessage?: string;
+  checkboxSavedMessage?: string;
 }) {
-  const [pending, start] = useTransition();
+  const [checkboxPending, startCheckbox] = useTransition();
   const [blocks, setBlocks] = useState<InstructionBlock[]>(initialBlocks);
 
   const serialized = JSON.stringify(initialBlocks);
   useEffect(() => {
     setBlocks(JSON.parse(serialized) as InstructionBlock[]);
   }, [serialized]);
+
+  const onSubmit = useCallback(
+    async (formData: FormData) => {
+      try {
+        await formAction(formData);
+        toast.success(submitSuccessMessage);
+      } catch (err) {
+        if (isNextRedirectError(err)) throw err;
+        console.error(err);
+        toast.error(submitErrorMessage);
+      }
+    },
+    [formAction, submitSuccessMessage, submitErrorMessage],
+  );
 
   function addParagraph() {
     setBlocks((prev) => [
@@ -82,13 +105,22 @@ export function InstructionBlocksEditor({
         b.type === "checkbox" && b.id === id ? { ...b, checked } : b,
       ),
     );
-    start(async () => {
-      await toggleCheckboxAction(entityId, id, checked);
+    startCheckbox(async () => {
+      try {
+        await toggleCheckboxAction(entityId, id, checked);
+        toast.success(checkboxSavedMessage, {
+          id: "instruction-checkbox-save",
+          duration: 2000,
+        });
+      } catch (err) {
+        if (isNextRedirectError(err)) throw err;
+        toast.error("Échec de l’enregistrement de la case.");
+      }
     });
   }
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={onSubmit} className="space-y-4">
       <input type="hidden" name={entityIdFieldName} value={entityId} />
       <input
         type="hidden"
@@ -102,6 +134,7 @@ export function InstructionBlocksEditor({
           variant="outline"
           className="gap-1.5 text-xs"
           onClick={addParagraph}
+          disabled={checkboxPending}
         >
           <MdAdd className="size-4" aria-hidden />
           Bloc texte
@@ -111,6 +144,7 @@ export function InstructionBlocksEditor({
           variant="outline"
           className="gap-1.5 text-xs"
           onClick={addCheckbox}
+          disabled={checkboxPending}
         >
           <MdAdd className="size-4" aria-hidden />
           Case à cocher
@@ -132,7 +166,8 @@ export function InstructionBlocksEditor({
               <button
                 type="button"
                 onClick={() => removeBlock(b.id)}
-                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700"
+                disabled={checkboxPending}
+                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 disabled:opacity-40"
                 aria-label="Retirer ce bloc"
               >
                 <MdClose className="size-4" />
@@ -144,6 +179,7 @@ export function InstructionBlocksEditor({
                 onChange={(e) => updateParagraph(b.id, e.target.value)}
                 placeholder="Consigne libre…"
                 className="mt-2 min-h-[88px]"
+                disabled={checkboxPending}
               />
             ) : (
               <div className="mt-2 flex items-start gap-3">
@@ -153,7 +189,7 @@ export function InstructionBlocksEditor({
                   onChange={(e) =>
                     toggleCheckboxLocal(b.id, e.target.checked)
                   }
-                  disabled={pending}
+                  disabled={checkboxPending}
                   className="mt-2 size-4 shrink-0 rounded border-zinc-300 accent-zinc-900"
                   aria-label="Cocher la tâche"
                 />
@@ -164,6 +200,7 @@ export function InstructionBlocksEditor({
                   }
                   placeholder="Intitulé de la case…"
                   className="flex-1"
+                  disabled={checkboxPending}
                 />
               </div>
             )}
@@ -171,9 +208,9 @@ export function InstructionBlocksEditor({
         ))}
       </ul>
 
-      <Button type="submit" variant="outline">
+      <SubmitButton variant="outline" pendingLabel="Enregistrement…">
         {submitLabel}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

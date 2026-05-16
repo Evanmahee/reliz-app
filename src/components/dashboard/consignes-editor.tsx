@@ -71,6 +71,8 @@ export function ConsignesEditor({
         formAction={updateEventConsignesAction}
         toggleCheckboxAction={toggleInstructionCheckboxAction}
         submitLabel="Enregistrer les consignes"
+        submitSuccessMessage="Consignes enregistrées"
+        checkboxSavedMessage="Case mise à jour"
       />
     </div>
   );

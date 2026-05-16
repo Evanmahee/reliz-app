@@ -12,9 +12,10 @@ import {
   ConsignesReadOnly,
 } from "@/components/dashboard/consignes-editor";
 import { EventQrCard } from "@/components/dashboard/event-qr-card";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { wrapFormActionWithToast } from "@/components/ui/form-action-toast";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
 import type { InstructionBlock } from "@/lib/instructions-blocks";
 
 type TabId = "infos" | "consignes" | "menu" | "qr";
@@ -126,7 +127,9 @@ export function EventDetailTabs({
               </dl>
             ) : (
               <form
-                action={updateEventInformationsAction}
+                action={wrapFormActionWithToast(updateEventInformationsAction, {
+                  success: "Informations enregistrées",
+                })}
                 className="mt-4 space-y-4"
               >
                 <input type="hidden" name="eventId" value={eventId} />
@@ -152,9 +155,9 @@ export function EventDetailTabs({
                     defaultValue={startsAtLocal}
                   />
                 </div>
-                <Button type="submit" variant="outline">
+                <SubmitButton variant="outline" pendingLabel="Enregistrement…">
                   Enregistrer
-                </Button>
+                </SubmitButton>
               </form>
             )}
           </div>
@@ -191,7 +194,12 @@ export function EventDetailTabs({
           >
             <h2 className="text-sm font-semibold text-zinc-900">Menu</h2>
             {!archived ? (
-              <form action={addMenuItemAction} className="mt-4 space-y-3">
+              <form
+                action={wrapFormActionWithToast(addMenuItemAction, {
+                  success: "Produit ajouté à la carte",
+                })}
+                className="mt-4 space-y-3"
+              >
                 <input type="hidden" name="eventId" value={eventId} />
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <div className="flex flex-1 flex-col gap-3 sm:flex-row">
@@ -207,7 +215,7 @@ export function EventDetailTabs({
                       className="sm:flex-1"
                     />
                   </div>
-                  <Button type="submit">Ajouter</Button>
+                  <SubmitButton pendingLabel="Ajout…">Ajouter</SubmitButton>
                 </div>
               </form>
             ) : null}
@@ -237,7 +245,11 @@ export function EventDetailTabs({
                     </div>
                     {!archived ? (
                       <div className="flex flex-wrap gap-2">
-                        <form action={toggleMenuStockAction}>
+                        <form
+                          action={wrapFormActionWithToast(toggleMenuStockAction, {
+                            success: "État du stock mis à jour",
+                          })}
+                        >
                           <input type="hidden" name="menuItemId" value={item.id} />
                           <input type="hidden" name="eventId" value={eventId} />
                           <input
@@ -245,26 +257,30 @@ export function EventDetailTabs({
                             name="outOfStock"
                             value={String(!item.outOfStock)}
                           />
-                          <Button
-                            type="submit"
+                          <SubmitButton
                             variant="outline"
                             className="text-xs"
+                            pendingLabel="…"
                           >
                             {item.outOfStock
                               ? "Remettre en stock"
                               : "Rupture de stock"}
-                          </Button>
+                          </SubmitButton>
                         </form>
-                        <form action={deleteMenuItemFormAction}>
+                        <form
+                          action={wrapFormActionWithToast(deleteMenuItemFormAction, {
+                            success: "Produit retiré de la carte",
+                          })}
+                        >
                           <input type="hidden" name="menuItemId" value={item.id} />
                           <input type="hidden" name="eventId" value={eventId} />
-                          <Button
-                            type="submit"
+                          <SubmitButton
                             variant="ghost"
                             className="text-xs text-red-700 hover:bg-red-50"
+                            pendingLabel="…"
                           >
                             Retirer
-                          </Button>
+                          </SubmitButton>
                         </form>
                       </div>
                     ) : null}

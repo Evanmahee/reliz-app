@@ -23,6 +23,8 @@ export function ChecklistBlocksEditor({
       formAction={updateChecklistBlocksAction}
       toggleCheckboxAction={toggleChecklistCheckboxAction}
       submitLabel="Enregistrer la checklist"
+      submitSuccessMessage="Checklist enregistrée"
+      checkboxSavedMessage="Case mise à jour"
     />
   );
 }

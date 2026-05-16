@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { markRequestDoneFormAction } from "@/app/actions/events";
 import { Button } from "@/components/ui/button";
+import { wrapFormActionWithToast } from "@/components/ui/form-action-toast";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 type Row = {
   id: string;
@@ -127,12 +129,16 @@ export function EventRequestsLive({ eventId }: { eventId: string }) {
                     Traité
                   </span>
                 ) : (
-                  <form action={markRequestDoneFormAction}>
+                  <form
+                    action={wrapFormActionWithToast(markRequestDoneFormAction, {
+                      success: "Demande marquée comme traitée",
+                    })}
+                  >
                     <input type="hidden" name="requestId" value={r.id} />
                     <input type="hidden" name="eventId" value={eventId} />
-                    <Button type="submit" variant="outline" className="text-xs">
+                    <SubmitButton variant="outline" className="text-xs" pendingLabel="…">
                       Marquer traité
-                    </Button>
+                    </SubmitButton>
                   </form>
                 )}
               </div>
