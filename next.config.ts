@@ -20,6 +20,21 @@ function isLoopbackOrLanHostname(host: string): boolean {
   );
 }
 
+/** NEXT_PUBLIC_APP_URL vide ou typée « locale » → on doit autoriser les Server Actions (connexion) sans liste invalide. */
+function nextPublicUrlLooksLocal(pub: string): boolean {
+  const p = pub.trim();
+  if (!p) return true;
+  const lower = p.toLowerCase();
+  if (lower.includes("localhost")) return true;
+  if (lower.includes("127.0.0.1")) return true;
+  if (lower.includes("[::1]")) return true;
+  try {
+    return isLoopbackOrLanHostname(new URL(p).hostname);
+  } catch {
+    return true;
+  }
+}
+
 /**
  * Si Origin ≠ Host (proxy, www vs apex…), Next.js bloque les Server Actions (connexion, formulaires).
  * En dev (`next dev`) et en prod locale (`next start` + URL dans .env), on autorise les combinaisons courantes.
@@ -64,6 +79,19 @@ function buildServerActionAllowedOrigins(): string[] {
   }
 
   if (process.env.NODE_ENV === "development") {
+    addCrossLoopbackVariants(origins, String(process.env.PORT ?? "3000"));
+  }
+
+  /*
+   * Hors Vercel : si l’URL publique ressemble à du local (ou est vide),
+   * autoriser localhost / 127.0.0.1 / ::1 avec le port courant — indispensable pour
+   * `npm run start` (NODE_ENV=production) sans NEXT_PUBLIC_APP_URL, ou Origin≠Host.
+   */
+  if (
+    process.env.VERCEL !== "1" &&
+    nextPublicUrlLooksLocal(pub) &&
+    process.env.SERVER_ACTIONS_STRICT_LOCAL?.trim() !== "1"
+  ) {
     addCrossLoopbackVariants(origins, String(process.env.PORT ?? "3000"));
   }
 
