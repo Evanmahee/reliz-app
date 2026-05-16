@@ -1,10 +1,22 @@
+import type { Event, Prisma } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  PrismaClientInitializationError,
+  PrismaClientKnownRequestError,
+  PrismaClientUnknownRequestError,
+} from "@prisma/client/runtime/library";
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 import { primaryButtonClassName } from "@/components/ui/button";
+
+export const dynamic = "force-dynamic";
+
+type RecentGuestRequest = Prisma.GuestRequestGetPayload<{
+  include: { event: { select: { id: true; name: true } } };
+}>;
 
 function typeLabel(t: string) {
   if (t === "PRODUCT") return "Commande";
@@ -17,29 +29,55 @@ export default async function DashboardHomePage() {
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
 
-  const events = await prisma.event.findMany({
-    where: { ownerId: userId, status: EVENT_STATUS.LIVE },
-    orderBy: [{ startsAt: "asc" }, { updatedAt: "desc" }],
-  });
+  let events: Event[];
+  try {
+    events = await prisma.event.findMany({
+      where: { ownerId: userId, status: EVENT_STATUS.LIVE },
+      orderBy: [{ startsAt: "asc" }, { updatedAt: "desc" }],
+    });
+  } catch (e) {
+    console.error("[dashboard]", e);
+    if (
+      e instanceof PrismaClientInitializationError ||
+      e instanceof PrismaClientKnownRequestError ||
+      e instanceof PrismaClientUnknownRequestError
+    ) {
+      redirect("/connexion?erreur=db");
+    }
+    redirect("/connexion?erreur=serveur");
+  }
 
   const count = events.length;
 
-  const recentRequests =
-    count > 0
-      ? await prisma.guestRequest.findMany({
-          where: {
-            event: {
-              ownerId: userId,
-              status: EVENT_STATUS.LIVE,
+  let recentRequests: RecentGuestRequest[];
+  try {
+    recentRequests =
+      count > 0
+        ? await prisma.guestRequest.findMany({
+            where: {
+              event: {
+                ownerId: userId,
+                status: EVENT_STATUS.LIVE,
+              },
             },
-          },
-          include: {
-            event: { select: { id: true, name: true } },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 60,
-        })
-      : [];
+            include: {
+              event: { select: { id: true, name: true } },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 60,
+          })
+        : [];
+  } catch (e) {
+    console.error("[dashboard guestRequest]", e);
+    if (
+      e instanceof PrismaClientInitializationError ||
+      e instanceof PrismaClientKnownRequestError ||
+      e instanceof PrismaClientUnknownRequestError
+    ) {
+      redirect("/connexion?erreur=db");
+    }
+    redirect("/connexion?erreur=serveur");
+  }
 
   recentRequests.sort((a, b) => {
     const pa = a.status === "PENDING" ? 0 : 1;

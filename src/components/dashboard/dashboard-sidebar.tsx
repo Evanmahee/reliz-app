@@ -37,6 +37,7 @@ export function DashboardSidebar({
             <Link
               key={l.href}
               href={l.href}
+              prefetch={false}
               className={`flex items-center gap-3 rounded-[1.15rem] px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-violet-100/70 text-zinc-900"

@@ -29,7 +29,7 @@ export function DashboardTabBar() {
             <li key={item.href} className="flex min-w-0 flex-1">
               <Link
                 href={item.href}
-                prefetch
+                prefetch={false}
                 className="md3-nav-item group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 touch-manipulation"
                 aria-current={active ? "page" : undefined}
               >

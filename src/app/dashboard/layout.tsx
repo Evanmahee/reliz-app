@@ -1,5 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  PrismaClientInitializationError,
+  PrismaClientKnownRequestError,
+  PrismaClientUnknownRequestError,
+} from "@prisma/client/runtime/library";
 import { logoutAction } from "@/app/actions/auth";
 import { getSessionUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -8,6 +13,8 @@ import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardTabBar } from "@/components/dashboard/dashboard-tab-bar";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -15,11 +22,26 @@ export default async function DashboardLayout({
 }) {
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { email: true, name: true },
-  });
-  if (!user) redirect("/connexion");
+
+  let user: { email: string; name: string | null };
+  try {
+    const row = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, name: true },
+    });
+    if (!row) redirect("/connexion");
+    user = row;
+  } catch (e) {
+    console.error("[dashboard layout]", e);
+    if (
+      e instanceof PrismaClientInitializationError ||
+      e instanceof PrismaClientKnownRequestError ||
+      e instanceof PrismaClientUnknownRequestError
+    ) {
+      redirect("/connexion?erreur=db");
+    }
+    redirect("/connexion?erreur=serveur");
+  }
 
   return (
     <div className="min-h-screen bg-zinc-100/80">
