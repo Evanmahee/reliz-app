@@ -18,7 +18,7 @@ export default async function HistoriquePage() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <div>
         <p className="text-xs font-medium text-zinc-400">{t("historique.tag")}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">

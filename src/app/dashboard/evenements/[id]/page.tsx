@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
-import { EVENT_STATUS } from "@/lib/constants";
+import { EVENT_STATUS, USER_ROLE } from "@/lib/constants";
+import { getSessionUser, getOwnerId, isOwner } from "@/lib/event-access";
 import { toDatetimeLocalValue } from "@/lib/datetime";
 import { parseInstructionsBlocks } from "@/lib/instructions-blocks";
+import { parseShoppingItems } from "@/lib/shopping-items";
 import { prisma } from "@/lib/prisma";
 import { EventDetailTabs } from "@/components/dashboard/event-detail-tabs";
 import { EventMoreMenu } from "@/components/dashboard/event-more-menu";
@@ -21,11 +23,56 @@ export default async function EventDetailPage({
   const { id } = await params;
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
+  const sessionUser = await getSessionUser(userId);
+  if (!sessionUser) redirect("/connexion");
+  const ownerId = getOwnerId(sessionUser);
+  const ownerView = isOwner(sessionUser);
+
   const event = await prisma.event.findFirst({
-    where: { id, ownerId: userId },
-    include: { menuItems: { orderBy: { sortOrder: "asc" } } },
+    where: ownerView
+      ? { id, ownerId: sessionUser.id }
+      : {
+          id,
+          ownerId,
+          staffAccess: { some: { userId: sessionUser.id } },
+        },
+    include: {
+      menuItems: { orderBy: { sortOrder: "asc" } },
+      accessories: { orderBy: { sortOrder: "asc" } },
+      ...(ownerView
+        ? {
+            shoppingLists: {
+              where: { ownerId: sessionUser.id },
+              orderBy: { updatedAt: "desc" as const },
+              take: 1,
+            },
+          }
+        : {}),
+    },
   });
   if (!event) notFound();
+
+  const menuItems = event.menuItems;
+  const accessories = event.accessories;
+  const shoppingListRow = ownerView ? event.shoppingLists[0] ?? null : null;
+
+  const staffMembers = ownerView
+    ? await prisma.user.findMany({
+        where: { employerId: ownerId, role: USER_ROLE.STAFF },
+        select: { id: true, name: true, email: true },
+        orderBy: { name: "asc" },
+      })
+    : [];
+
+  const shoppingList = shoppingListRow
+    ? {
+        id: shoppingListRow.id,
+        name: shoppingListRow.name,
+        items: parseShoppingItems(shoppingListRow.items),
+        sentTo: shoppingListRow.sentTo,
+        sentAt: shoppingListRow.sentAt?.toISOString() ?? null,
+      }
+    : null;
   const archived = event.status === EVENT_STATUS.ARCHIVED;
   const base =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
@@ -40,7 +87,7 @@ export default async function EventDetailPage({
   const backLabel = archived ? t("events.backToHistory") : t("events.backToEvents");
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 pb-16">
+    <div className="w-full space-y-8 pb-16">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Link
@@ -58,30 +105,45 @@ export default async function EventDetailPage({
             </span>
           ) : null}
         </div>
-        <EventMoreMenu eventId={event.id} archived={archived} />
+        {isOwner(sessionUser) ? (
+          <EventMoreMenu eventId={event.id} archived={archived} />
+        ) : null}
       </div>
 
       <EventDetailTabs
         eventId={event.id}
         archived={archived}
+        isOwner={isOwner(sessionUser)}
         name={event.name}
         venue={event.venue}
+        menuHidden={event.menuHidden}
         startsAtLocal={toDatetimeLocalValue(event.startsAt)}
         instructionBlocks={instructionBlocks}
-        menuItems={event.menuItems.map((m) => ({
+        menuItems={menuItems.map((m) => ({
           id: m.id,
           name: m.name,
           description: m.description,
           outOfStock: m.outOfStock,
+          hidden: m.hidden,
         }))}
+        accessories={accessories.map((a) => ({
+          id: a.id,
+          name: a.name,
+          quantity: a.quantity,
+          notes: a.notes,
+        }))}
+        shoppingList={shoppingList}
+        staffMembers={staffMembers}
         guestUrl={guestUrl}
         qrDownloadHref={`/api/evenements/${event.id}/qr`}
       />
 
       {!archived ? (
-        <Card className="px-5 py-6 sm:px-6">
-          <EventRequestsLive eventId={event.id} />
-        </Card>
+        <>
+          <Card className="px-5 py-6 sm:px-6">
+            <EventRequestsLive eventId={event.id} />
+          </Card>
+        </>
       ) : null}
     </div>
   );

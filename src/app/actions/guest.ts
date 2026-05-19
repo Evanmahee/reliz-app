@@ -8,6 +8,7 @@ import { getT } from "@/i18n/server";
 export async function submitGuestRequest(input: {
   publicSlug: string;
   tableNumber: string;
+  tableLocation?: string;
   type: string;
   message: string;
 }) {
@@ -27,10 +28,12 @@ export async function submitGuestRequest(input: {
   if (!message) {
     return { ok: false as const, error: t("guest.errors.messageRequired") };
   }
+  const tableLocation = String(input.tableLocation ?? "").trim();
   await prisma.guestRequest.create({
     data: {
       eventId: event.id,
       tableNumber,
+      tableLocation,
       type: input.type,
       message,
     },

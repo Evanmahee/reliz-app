@@ -2,8 +2,12 @@
 
 import { useId, useMemo, useState } from "react";
 import {
+  addEventAccessoryAction,
   addMenuItemAction,
+  deleteEventAccessoryAction,
   deleteMenuItemFormAction,
+  toggleEventMenuHiddenAction,
+  toggleMenuItemHiddenAction,
   toggleMenuStockAction,
   updateEventInformationsAction,
 } from "@/app/actions/events";
@@ -11,6 +15,11 @@ import {
   ConsignesEditor,
   ConsignesReadOnly,
 } from "@/components/dashboard/consignes-editor";
+import { EventTasksCardList } from "@/components/dashboard/event-tasks-card-list";
+import {
+  EventShoppingPanel,
+  type EventShoppingListData,
+} from "@/components/dashboard/event-shopping-panel";
 import { EventQrCard } from "@/components/dashboard/event-qr-card";
 import { Card } from "@/components/ui/card";
 import { wrapFormActionWithToast } from "@/components/ui/form-action-toast";
@@ -20,35 +29,60 @@ import { dateLocaleTag } from "@/i18n/date-locale";
 import { useT } from "@/i18n/i18n-provider";
 import type { InstructionBlock } from "@/lib/instructions-blocks";
 
-type TabId = "infos" | "consignes" | "menu" | "qr";
+type TabId = "infos" | "consignes" | "menu" | "accessories" | "shopping" | "qr";
 
-const TAB_IDS: TabId[] = ["infos", "consignes", "menu", "qr"];
+const TAB_IDS: TabId[] = [
+  "infos",
+  "consignes",
+  "menu",
+  "accessories",
+  "shopping",
+  "qr",
+];
 
 export type EventDetailTabsMenuItem = {
   id: string;
   name: string;
   description: string;
   outOfStock: boolean;
+  hidden: boolean;
+};
+
+export type EventDetailTabsAccessory = {
+  id: string;
+  name: string;
+  quantity: number;
+  notes: string;
 };
 
 export function EventDetailTabs({
   eventId,
   archived,
+  isOwner,
   name,
   venue,
+  menuHidden,
   startsAtLocal,
   instructionBlocks,
   menuItems,
+  accessories,
+  shoppingList,
+  staffMembers,
   guestUrl,
   qrDownloadHref,
 }: {
   eventId: string;
   archived: boolean;
+  isOwner: boolean;
   name: string;
   venue: string;
+  menuHidden: boolean;
   startsAtLocal: string;
   instructionBlocks: InstructionBlock[];
   menuItems: EventDetailTabsMenuItem[];
+  accessories: EventDetailTabsAccessory[];
+  shoppingList: EventShoppingListData | null;
+  staffMembers: { id: string; name: string | null; email: string }[];
   guestUrl: string;
   qrDownloadHref: string;
 }) {
@@ -61,10 +95,18 @@ export function EventDetailTabs({
       infos: t("events.tabs.infos"),
       consignes: t("events.tabs.consignes"),
       menu: t("events.tabs.menu"),
+      accessories: t("events.tabs.accessories"),
+      shopping: t("events.tabs.shopping"),
       qr: t("events.tabs.qr"),
     }),
     [t],
   );
+
+  const visibleTabs = isOwner
+    ? TAB_IDS
+    : TAB_IDS.filter(
+        (id) => id !== "infos" && id !== "qr" && id !== "shopping",
+      );
 
   const updateInfosWrapped = useMemo(
     () =>
@@ -100,7 +142,7 @@ export function EventDetailTabs({
         role="tablist"
         aria-label={t("events.tablistAria")}
       >
-        {TAB_IDS.map((id) => {
+        {visibleTabs.map((id) => {
           const selected = tab === id;
           return (
             <button
@@ -112,10 +154,10 @@ export function EventDetailTabs({
               aria-controls={`${uid}-panel-${id}`}
               tabIndex={selected ? 0 : -1}
               onClick={() => setTab(id)}
-              className={`shrink-0 rounded-[1.15rem] px-4 py-2.5 text-sm font-medium transition-colors sm:flex-1 sm:px-3 ${
+              className={`shrink-0 rounded-[1.15rem] px-4 py-2.5 text-sm transition-colors sm:flex-1 sm:px-3 ${
                 selected
-                  ? "bg-white text-zinc-900"
-                  : "text-zinc-500 hover:text-zinc-800"
+                  ? "bg-white font-semibold text-zinc-900"
+                  : "font-medium text-zinc-500 hover:text-zinc-800"
               }`}
             >
               {tabLabels[id]}
@@ -134,7 +176,7 @@ export function EventDetailTabs({
             <h2 className="text-sm font-semibold text-zinc-900">
               {t("events.infoTitle")}
             </h2>
-            {archived ? (
+            {archived || !isOwner ? (
               <dl className="mt-4 space-y-4 text-sm">
                 <div>
                   <dt className="text-xs font-medium text-zinc-500">
@@ -199,13 +241,23 @@ export function EventDetailTabs({
             </h2>
             <p className="mt-1 text-xs text-zinc-500">{t("events.consignesHint")}</p>
             {archived ? (
-              <ConsignesReadOnly blocks={instructionBlocks} />
+              <ConsignesReadOnly
+                blocks={instructionBlocks}
+                staffMembers={staffMembers}
+              />
             ) : (
               <ConsignesEditor
                 eventId={eventId}
                 initialBlocks={instructionBlocks}
+                staffMembers={staffMembers}
               />
             )}
+            <EventTasksCardList
+              eventId={eventId}
+              eventName={name}
+              blocks={instructionBlocks}
+              staffMembers={staffMembers}
+            />
           </div>
         ) : null}
 
@@ -218,7 +270,30 @@ export function EventDetailTabs({
             <h2 className="text-sm font-semibold text-zinc-900">
               {t("events.menuTitle")}
             </h2>
-            {!archived ? (
+            {!archived && isOwner ? (
+              <form
+                action={wrapFormActionWithToast(toggleEventMenuHiddenAction, {
+                  success: t("events.toast.menuVisibility"),
+                })}
+                className="mt-3"
+              >
+                <input type="hidden" name="eventId" value={eventId} />
+                <input
+                  type="hidden"
+                  name="menuHidden"
+                  value={String(!menuHidden)}
+                />
+                <SubmitButton variant="outline" className="text-xs" pendingLabel="…">
+                  {menuHidden ? t("events.showMenu") : t("events.hideMenu")}
+                </SubmitButton>
+              </form>
+            ) : null}
+            {menuHidden && !archived ? (
+              <p className="mt-2 text-xs text-amber-800 bg-amber-50 rounded-lg px-3 py-2">
+                {t("events.menuHiddenHint")}
+              </p>
+            ) : null}
+            {!archived && isOwner ? (
               <form action={addMenuWrapped} className="mt-4 space-y-3">
                 <input type="hidden" name="eventId" value={eventId} />
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -259,14 +334,35 @@ export function EventDetailTabs({
                           {item.description}
                         </p>
                       ) : null}
+                      {item.hidden ? (
+                        <span className="mt-2 inline-block rounded-full bg-zinc-200 px-2.5 py-0.5 text-xs font-medium text-zinc-700">
+                          {t("events.hidden")}
+                        </span>
+                      ) : null}
                       {item.outOfStock ? (
                         <span className="mt-2 inline-block rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-900">
                           {t("events.outOfStock")}
                         </span>
                       ) : null}
                     </div>
-                    {!archived ? (
+                    {!archived && isOwner ? (
                       <div className="flex flex-wrap gap-2">
+                        <form
+                          action={wrapFormActionWithToast(toggleMenuItemHiddenAction, {
+                            success: t("events.toast.visibility"),
+                          })}
+                        >
+                          <input type="hidden" name="menuItemId" value={item.id} />
+                          <input type="hidden" name="eventId" value={eventId} />
+                          <input
+                            type="hidden"
+                            name="hidden"
+                            value={String(!item.hidden)}
+                          />
+                          <SubmitButton variant="outline" className="text-xs" pendingLabel="…">
+                            {item.hidden ? t("events.showProduct") : t("events.hideProduct")}
+                          </SubmitButton>
+                        </form>
                         <form
                           action={wrapFormActionWithToast(toggleMenuStockAction, {
                             success: t("events.toast.stockUpdated"),
@@ -310,6 +406,88 @@ export function EventDetailTabs({
                 ))
               )}
             </ul>
+          </div>
+        ) : null}
+
+        {tab === "accessories" ? (
+          <div
+            role="tabpanel"
+            id={`${uid}-panel-accessories`}
+            aria-labelledby={`${uid}-tab-accessories`}
+          >
+            <h2 className="text-sm font-semibold text-zinc-900">
+              {t("events.accessoriesTitle")}
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500">{t("events.accessoriesHint")}</p>
+            {!archived && isOwner ? (
+              <form
+                action={wrapFormActionWithToast(addEventAccessoryAction, {
+                  success: t("events.toast.accessoryAdded"),
+                })}
+                className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end"
+              >
+                <input type="hidden" name="eventId" value={eventId} />
+                <Input name="name" placeholder={t("events.accessoryName")} className="sm:flex-1" required />
+                <Input name="quantity" type="number" min={1} defaultValue={1} className="w-24" />
+                <Input name="notes" placeholder={t("events.accessoryNotes")} className="sm:flex-1" />
+                <SubmitButton pendingLabel={t("events.adding")}>{t("events.add")}</SubmitButton>
+              </form>
+            ) : null}
+            <ul className="mt-6 divide-y divide-zinc-100 rounded-[1.25rem] border border-zinc-100">
+              {accessories.length === 0 ? (
+                <li className="px-4 py-8 text-center text-sm text-zinc-500">
+                  {t("events.emptyAccessories")}
+                </li>
+              ) : (
+                accessories.map((a) => (
+                  <li
+                    key={a.id}
+                    className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="font-medium text-zinc-900">
+                        {a.name}{" "}
+                        <span className="text-zinc-400">×{a.quantity}</span>
+                      </p>
+                      {a.notes ? (
+                        <p className="mt-0.5 text-sm text-zinc-500">{a.notes}</p>
+                      ) : null}
+                    </div>
+                    {!archived && isOwner ? (
+                      <form
+                        action={wrapFormActionWithToast(deleteEventAccessoryAction, {
+                          success: t("events.toast.accessoryRemoved"),
+                        })}
+                      >
+                        <input type="hidden" name="eventId" value={eventId} />
+                        <input type="hidden" name="accessoryId" value={a.id} />
+                        <SubmitButton variant="ghost" className="text-xs text-red-700" pendingLabel="…">
+                          {t("events.remove")}
+                        </SubmitButton>
+                      </form>
+                    ) : null}
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        ) : null}
+
+        {tab === "shopping" ? (
+          <div
+            role="tabpanel"
+            id={`${uid}-panel-shopping`}
+            aria-labelledby={`${uid}-tab-shopping`}
+          >
+            <h2 className="text-sm font-semibold text-zinc-900">
+              {t("events.shoppingTitle")}
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500">{t("events.shoppingHint")}</p>
+            <EventShoppingPanel
+              eventId={eventId}
+              shoppingList={shoppingList}
+              archived={archived}
+            />
           </div>
         ) : null}
 

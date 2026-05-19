@@ -8,6 +8,7 @@ import {
 import { outlineButtonClassName } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getSessionUserId } from "@/lib/auth";
+import { USER_ROLE } from "@/lib/constants";
 import { parseInstructionsBlocks } from "@/lib/instructions-blocks";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/i18n/server";
@@ -29,8 +30,14 @@ export default async function ChecklistDetailPage({
 
   const blocks = parseInstructionsBlocks(checklist.blocks, "");
 
+  const staffMembers = await prisma.user.findMany({
+    where: { employerId: userId, role: USER_ROLE.STAFF },
+    select: { id: true, name: true, email: true },
+    orderBy: { name: "asc" },
+  });
+
   return (
-    <div className="mx-auto max-w-3xl space-y-8 pb-16">
+    <div className="w-full space-y-8 pb-16">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Link href="/dashboard/checklists" className={outlineButtonClassName}>
@@ -55,7 +62,11 @@ export default async function ChecklistDetailPage({
       <Card className="px-5 py-6 sm:px-6">
         <h2 className="text-sm font-semibold text-zinc-900">{t("checklists.contentTitle")}</h2>
         <p className="mt-1 text-xs text-zinc-500">{t("checklists.contentHint")}</p>
-        <ChecklistBlocksEditor checklistId={checklist.id} initialBlocks={blocks} />
+        <ChecklistBlocksEditor
+          checklistId={checklist.id}
+          initialBlocks={blocks}
+          staffMembers={staffMembers}
+        />
       </Card>
     </div>
   );

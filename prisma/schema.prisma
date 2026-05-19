@@ -12,10 +12,21 @@ model User {
   email        String      @unique
   name         String?
   passwordHash String
+  role         String      @default("OWNER")
+  employerId   String?
+  employer     User?       @relation("StaffEmployer", fields: [employerId], references: [id], onDelete: Cascade)
+  staffMembers User[]      @relation("StaffEmployer")
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   events       Event[]
   checklists   Checklist[]
+  shoppingLists ShoppingList[]
+  staffEventAccess StaffEventAccess[]
+  staffTasksCreated StaffTask[] @relation("StaffTaskCreator")
+  staffTasksAssigned StaffTask[] @relation("StaffTaskAssignee")
+
+  @@index([employerId])
+  @@index([role])
 }
 
 model Checklist {
@@ -39,6 +50,7 @@ model Event {
   endsAt              DateTime?
   instructions        String         @default("")
   instructionsBlocks  Json?
+  menuHidden          Boolean        @default(false)
   status              String         @default("LIVE")
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
@@ -46,9 +58,74 @@ model Event {
   owner               User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   menuItems           MenuItem[]
   requests            GuestRequest[]
+  accessories         EventAccessory[]
+  staffAccess         StaffEventAccess[]
+  staffTasks          StaffTask[]
+  shoppingLists       ShoppingList[]
 
   @@index([ownerId])
   @@index([status])
+}
+
+model StaffEventAccess {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
+}
+
+model StaffTask {
+  id           String   @id @default(cuid())
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdById  String
+  createdBy    User     @relation("StaffTaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  assignedToId String?
+  assignedTo   User?    @relation("StaffTaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  title        String
+  note         String   @default("")
+  status       String   @default("PENDING")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([eventId])
+  @@index([assignedToId])
+  @@index([status])
+}
+
+model ShoppingList {
+  id        String   @id @default(cuid())
+  name      String
+  items     Json
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  eventId   String?
+  event     Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  sentAt    DateTime?
+  sentTo    String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([eventId])
+}
+
+model EventAccessory {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  quantity  Int      @default(1)
+  notes     String   @default("")
+  sortOrder Int      @default(0)
+
+  @@index([eventId])
 }
 
 model MenuItem {
@@ -59,19 +136,21 @@ model MenuItem {
   description String   @default("")
   sortOrder   Int      @default(0)
   outOfStock  Boolean  @default(false)
+  hidden      Boolean  @default(false)
 
   @@index([eventId])
 }
 
 model GuestRequest {
-  id          String   @id @default(cuid())
-  eventId     String
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  tableNumber String
-  type        String
-  message     String
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tableNumber   String
+  tableLocation String   @default("")
+  type          String
+  message       String
+  status        String   @default("PENDING")
+  createdAt     DateTime @default(now())
 
   @@index([eventId])
   @@index([status])

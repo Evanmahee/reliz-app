@@ -17,7 +17,7 @@ export default async function EvenementsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-medium text-zinc-400">{t("events.listTag")}</p>

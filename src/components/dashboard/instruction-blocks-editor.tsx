@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { MdAdd, MdClose } from "react-icons/md";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
@@ -11,6 +12,16 @@ import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/i18n/i18n-provider";
+
+export type StaffMemberOption = {
+  id: string;
+  name: string | null;
+  email: string;
+};
+
+function staffLabel(m: StaffMemberOption) {
+  return m.name?.trim() || m.email;
+}
 
 export function InstructionBlocksEditor({
   initialBlocks,
@@ -23,6 +34,7 @@ export function InstructionBlocksEditor({
   submitSuccessMessage,
   submitErrorMessage,
   checkboxSavedMessage,
+  staffMembers = [],
 }: {
   initialBlocks: InstructionBlock[];
   entityIdFieldName: string;
@@ -38,6 +50,8 @@ export function InstructionBlocksEditor({
   submitSuccessMessage: string;
   submitErrorMessage?: string;
   checkboxSavedMessage?: string;
+  /** Si fourni, permet d’assigner chaque tâche à un membre du personnel. */
+  staffMembers?: StaffMemberOption[];
 }) {
   const { t } = useT();
   const resolvedSubmitError =
@@ -47,6 +61,10 @@ export function InstructionBlocksEditor({
 
   const [checkboxPending, startCheckbox] = useTransition();
   const [blocks, setBlocks] = useState<InstructionBlock[]>(initialBlocks);
+  const staffById = useMemo(
+    () => new Map(staffMembers.map((s) => [s.id, s])),
+    [staffMembers],
+  );
 
   const serialized = JSON.stringify(initialBlocks);
   useEffect(() => {
@@ -77,7 +95,13 @@ export function InstructionBlocksEditor({
   function addCheckbox() {
     setBlocks((prev) => [
       ...prev,
-      { type: "checkbox", id: nanoid(), label: "", checked: false },
+      {
+        type: "checkbox",
+        id: nanoid(),
+        label: "",
+        checked: false,
+        assignedToId: null,
+      },
     ]);
   }
 
@@ -102,6 +126,16 @@ export function InstructionBlocksEditor({
     setBlocks((prev) =>
       prev.map((b) =>
         b.type === "checkbox" && b.id === id ? { ...b, label } : b,
+      ),
+    );
+  }
+
+  function updateCheckboxAssignee(id: string, assignedToId: string) {
+    setBlocks((prev) =>
+      prev.map((b) =>
+        b.type === "checkbox" && b.id === id
+          ? { ...b, assignedToId: assignedToId || null }
+          : b,
       ),
     );
   }
@@ -169,6 +203,14 @@ export function InstructionBlocksEditor({
                 {b.type === "paragraph"
                   ? `${t("instructionEditor.textBlock")} ${index + 1}`
                   : `${t("instructionEditor.taskBlock")} ${index + 1}`}
+                {b.type === "checkbox" && b.assignedToId ? (
+                  <span className="ml-1.5 font-normal normal-case text-violet-700">
+                    ·{" "}
+                    {staffById.get(b.assignedToId)
+                      ? staffLabel(staffById.get(b.assignedToId)!)
+                      : "—"}
+                  </span>
+                ) : null}
               </span>
               <button
                 type="button"
@@ -189,26 +231,62 @@ export function InstructionBlocksEditor({
                 disabled={checkboxPending}
               />
             ) : (
-              <div className="mt-2 flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={b.checked}
-                  onChange={(e) =>
-                    toggleCheckboxLocal(b.id, e.target.checked)
-                  }
-                  disabled={checkboxPending}
-                  className="mt-2 size-4 shrink-0 rounded border-zinc-300 accent-zinc-900"
-                  aria-label={t("instructionEditor.checkboxAria")}
-                />
-                <Input
-                  value={b.label}
-                  onChange={(e) =>
-                    updateCheckboxLabel(b.id, e.target.value)
-                  }
-                  placeholder={t("instructionEditor.checkboxPh")}
-                  className="flex-1"
-                  disabled={checkboxPending}
-                />
+              <div className="mt-2 space-y-2">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={b.checked}
+                    onChange={(e) =>
+                      toggleCheckboxLocal(b.id, e.target.checked)
+                    }
+                    disabled={checkboxPending}
+                    className="mt-2 size-4 shrink-0 rounded border-zinc-300 accent-zinc-900"
+                    aria-label={t("instructionEditor.checkboxAria")}
+                  />
+                  <Input
+                    value={b.label}
+                    onChange={(e) =>
+                      updateCheckboxLabel(b.id, e.target.value)
+                    }
+                    placeholder={t("instructionEditor.checkboxPh")}
+                    className="flex-1"
+                    disabled={checkboxPending}
+                  />
+                </div>
+                <div className="pl-7">
+                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+                    {t("instructionEditor.assignTo")}
+                  </label>
+                  {staffMembers.length > 0 ? (
+                    <select
+                      value={b.assignedToId ?? ""}
+                      onChange={(e) =>
+                        updateCheckboxAssignee(b.id, e.target.value)
+                      }
+                      disabled={checkboxPending}
+                      className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm"
+                    >
+                      <option value="">
+                        {t("instructionEditor.assignAnyone")}
+                      </option>
+                      {staffMembers.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {staffLabel(s)}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-xs leading-relaxed text-zinc-500">
+                      {t("instructionEditor.noStaffForAssign")}{" "}
+                      <Link
+                        href="/dashboard/equipe"
+                        className="font-medium text-violet-700 underline underline-offset-2"
+                      >
+                        {t("instructionEditor.manageTeam")}
+                      </Link>
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </li>

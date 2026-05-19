@@ -20,7 +20,7 @@ export function LocaleSwitcher({
     >
       <form action={setLocaleAction} className="inline-flex gap-1">
         <input type="hidden" name="returnTo" value={returnTo} />
-        {(["fr", "en"] as const).map((code: Locale) => (
+        {(["fr", "en", "es", "de"] as const).map((code: Locale) => (
           <button
             key={code}
             type="submit"

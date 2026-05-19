@@ -8,8 +8,24 @@ import { InstructionBlocksEditor } from "@/components/dashboard/instruction-bloc
 import { useT } from "@/i18n/i18n-provider";
 import type { InstructionBlock } from "@/lib/instructions-blocks";
 
-export function ConsignesReadOnly({ blocks }: { blocks: InstructionBlock[] }) {
+function staffName(
+  id: string | null | undefined,
+  staffById: Map<string, { name: string | null; email: string }>,
+) {
+  if (!id) return null;
+  const s = staffById.get(id);
+  return s ? s.name?.trim() || s.email : null;
+}
+
+export function ConsignesReadOnly({
+  blocks,
+  staffMembers = [],
+}: {
+  blocks: InstructionBlock[];
+  staffMembers?: { id: string; name: string | null; email: string }[];
+}) {
   const { t } = useT();
+  const staffById = new Map(staffMembers.map((s) => [s.id, s]));
   if (
     blocks.length === 1 &&
     blocks[0].type === "paragraph" &&
@@ -48,6 +64,11 @@ export function ConsignesReadOnly({ blocks }: { blocks: InstructionBlock[] }) {
             />
             <span className={b.checked ? "text-zinc-500 line-through" : ""}>
               {b.label.trim() || t("instructionEditor.untitled")}
+              {staffName(b.assignedToId, staffById) ? (
+                <span className="ml-2 text-xs font-medium text-violet-700">
+                  → {staffName(b.assignedToId, staffById)}
+                </span>
+              ) : null}
             </span>
           </label>
         );
@@ -59,9 +80,11 @@ export function ConsignesReadOnly({ blocks }: { blocks: InstructionBlock[] }) {
 export function ConsignesEditor({
   eventId,
   initialBlocks,
+  staffMembers = [],
 }: {
   eventId: string;
   initialBlocks: InstructionBlock[];
+  staffMembers?: { id: string; name: string | null; email: string }[];
 }) {
   const { t } = useT();
   return (
@@ -75,6 +98,7 @@ export function ConsignesEditor({
         toggleCheckboxAction={toggleInstructionCheckboxAction}
         submitLabel={t("checklists.saveConsignes")}
         submitSuccessMessage={t("checklists.toastConsignes")}
+        staffMembers={staffMembers}
       />
     </div>
   );

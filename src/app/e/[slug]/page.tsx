@@ -39,11 +39,13 @@ export default async function GuestEventPage({
         <GuestApp
           publicSlug={event.publicSlug}
           eventName={event.name}
+          menuHidden={event.menuHidden}
           menuItems={event.menuItems.map((m) => ({
             id: m.id,
             name: m.name,
             description: m.description,
             outOfStock: m.outOfStock,
+            hidden: m.hidden,
           }))}
         />
       </div>

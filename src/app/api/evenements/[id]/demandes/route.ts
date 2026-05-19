@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { assertEventAccess, getSessionUser } from "@/lib/event-access";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -13,11 +14,13 @@ export async function GET(
   if (!userId) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
-  const event = await prisma.event.findFirst({
-    where: { id, ownerId: userId },
-    select: { id: true },
-  });
-  if (!event) {
+  const user = await getSessionUser(userId);
+  if (!user) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+  try {
+    await assertEventAccess(id, user);
+  } catch {
     return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   }
   const requests = await prisma.guestRequest.findMany({

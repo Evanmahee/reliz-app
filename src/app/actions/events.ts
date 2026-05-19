@@ -9,6 +9,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS } from "@/lib/constants";
+import {
+  assertEventAccess,
+  isOwner,
+  requireSessionUser,
+} from "@/lib/event-access";
 import { isNextRedirectError } from "@/lib/is-next-redirect-error";
 import {
   cloneBlocksWithNewIds,
@@ -20,15 +25,22 @@ import {
 } from "@/lib/instructions-blocks";
 import { prisma } from "@/lib/prisma";
 
-async function requireOwner() {
-  const userId = await getSessionUserId();
-  if (!userId) throw new Error("Non authentifié");
-  return userId;
+async function requireOwnerId() {
+  const user = await requireSessionUser();
+  if (!isOwner(user)) throw new Error("Réservé au traiteur");
+  return user.id;
 }
 
-async function assertEventOwned(eventId: string, userId: string) {
+async function assertEventForSession(eventId: string) {
+  const user = await requireSessionUser();
+  return assertEventAccess(eventId, user);
+}
+
+async function assertEventOwnedByTraiteur(eventId: string) {
+  const user = await requireSessionUser();
+  if (!isOwner(user)) throw new Error("Réservé au traiteur");
   const ev = await prisma.event.findFirst({
-    where: { id: eventId, ownerId: userId },
+    where: { id: eventId, ownerId: user.id },
   });
   if (!ev) throw new Error("Événement introuvable");
   return ev;
@@ -39,7 +51,7 @@ function randomSlug() {
 }
 
 export async function createEventAction(formData: FormData) {
-  const userId = await requireOwner();
+  const userId = await requireOwnerId();
   const name = String(formData.get("name") ?? "").trim();
   const venue = String(formData.get("venue") ?? "").trim();
   const checklistId = String(formData.get("checklistId") ?? "").trim();
@@ -123,10 +135,10 @@ export async function createEventAction(formData: FormData) {
 }
 
 export async function updateEventInformationsAction(formData: FormData) {
-  const userId = await requireOwner();
+  const userId = await requireOwnerId();
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return;
-  await assertEventOwned(eventId, userId);
+  await assertEventOwnedByTraiteur(eventId);
   const name = String(formData.get("name") ?? "").trim();
   const venue = String(formData.get("venue") ?? "").trim();
   const startsRaw = String(formData.get("startsAt") ?? "").trim();
@@ -147,10 +159,10 @@ export async function updateEventInformationsAction(formData: FormData) {
 }
 
 export async function updateEventConsignesAction(formData: FormData) {
-  const userId = await requireOwner();
+  const userId = await requireOwnerId();
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return;
-  const ev = await assertEventOwned(eventId, userId);
+  const ev = await assertEventOwnedByTraiteur(eventId);
   const rawPayload = String(formData.get("instructionsPayload") ?? "").trim();
   let normalized = rawPayload
     ? validateAndNormalizeBlocksFromJson(rawPayload, ev.instructions)
@@ -167,6 +179,7 @@ export async function updateEventConsignesAction(formData: FormData) {
   revalidatePath(`/dashboard/evenements/${eventId}`);
   revalidatePath("/dashboard/evenements");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/taches");
 }
 
 export async function toggleInstructionCheckboxAction(
@@ -174,10 +187,9 @@ export async function toggleInstructionCheckboxAction(
   blockId: string,
   checked: boolean,
 ) {
-  const userId = await requireOwner();
-  await assertEventOwned(eventId, userId);
+  await assertEventForSession(eventId);
   const ev = await prisma.event.findFirst({
-    where: { id: eventId, ownerId: userId },
+    where: { id: eventId },
     select: { instructionsBlocks: true, instructions: true },
   });
   if (!ev) return;
@@ -203,11 +215,12 @@ export async function toggleInstructionCheckboxAction(
   revalidatePath(`/dashboard/evenements/${eventId}`);
   revalidatePath("/dashboard/evenements");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/taches");
 }
 
 export async function deleteEventAction(eventId: string) {
-  const userId = await requireOwner();
-  await assertEventOwned(eventId, userId);
+  const userId = await requireOwnerId();
+  await assertEventOwnedByTraiteur(eventId);
   await prisma.event.delete({ where: { id: eventId } });
   revalidatePath("/dashboard/evenements");
   revalidatePath("/dashboard/historique");
@@ -215,8 +228,8 @@ export async function deleteEventAction(eventId: string) {
 }
 
 export async function archiveEventAction(eventId: string) {
-  const userId = await requireOwner();
-  await assertEventOwned(eventId, userId);
+  const userId = await requireOwnerId();
+  await assertEventOwnedByTraiteur(eventId);
   await prisma.event.update({
     where: { id: eventId },
     data: { status: EVENT_STATUS.ARCHIVED },
@@ -236,10 +249,10 @@ export async function archiveEventFormAction(formData: FormData) {
 }
 
 export async function addMenuItemAction(formData: FormData) {
-  const userId = await requireOwner();
+  const userId = await requireOwnerId();
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return;
-  await assertEventOwned(eventId, userId);
+  await assertEventOwnedByTraiteur(eventId);
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   if (!name) return;
@@ -259,11 +272,11 @@ export async function addMenuItemAction(formData: FormData) {
 }
 
 export async function deleteMenuItemFormAction(formData: FormData) {
-  const userId = await requireOwner();
+  const userId = await requireOwnerId();
   const menuItemId = String(formData.get("menuItemId") ?? "");
   const eventId = String(formData.get("eventId") ?? "");
   if (!menuItemId || !eventId) return;
-  await assertEventOwned(eventId, userId);
+  await assertEventOwnedByTraiteur(eventId);
   await prisma.menuItem.deleteMany({
     where: { id: menuItemId, eventId },
   });
@@ -271,12 +284,12 @@ export async function deleteMenuItemFormAction(formData: FormData) {
 }
 
 export async function toggleMenuStockAction(formData: FormData) {
-  const userId = await requireOwner();
+  const userId = await requireOwnerId();
   const menuItemId = String(formData.get("menuItemId") ?? "");
   const eventId = String(formData.get("eventId") ?? "");
   const next = String(formData.get("outOfStock") ?? "") === "true";
   if (!menuItemId || !eventId) return;
-  await assertEventOwned(eventId, userId);
+  await assertEventOwnedByTraiteur(eventId);
   await prisma.menuItem.updateMany({
     where: { id: menuItemId, eventId },
     data: { outOfStock: next },
@@ -290,8 +303,7 @@ export async function toggleMenuStockAction(formData: FormData) {
 }
 
 export async function markRequestDoneAction(requestId: string, eventId: string) {
-  const userId = await requireOwner();
-  await assertEventOwned(eventId, userId);
+  await assertEventForSession(eventId);
   await prisma.guestRequest.updateMany({
     where: { id: requestId, eventId },
     data: { status: "DONE" },
@@ -305,4 +317,71 @@ export async function markRequestDoneFormAction(formData: FormData) {
   const eventId = String(formData.get("eventId") ?? "");
   if (!requestId || !eventId) return;
   await markRequestDoneAction(requestId, eventId);
+}
+
+export async function toggleEventMenuHiddenAction(formData: FormData) {
+  const eventId = String(formData.get("eventId") ?? "");
+  const hidden = String(formData.get("menuHidden") ?? "") === "true";
+  if (!eventId) return;
+  const ev = await assertEventOwnedByTraiteur(eventId);
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { menuHidden: hidden },
+  });
+  revalidatePath(`/dashboard/evenements/${eventId}`);
+  revalidatePath(`/e/${ev.publicSlug}`);
+}
+
+export async function toggleMenuItemHiddenAction(formData: FormData) {
+  const userId = await requireOwnerId();
+  const menuItemId = String(formData.get("menuItemId") ?? "");
+  const eventId = String(formData.get("eventId") ?? "");
+  const hidden = String(formData.get("hidden") ?? "") === "true";
+  if (!menuItemId || !eventId) return;
+  await assertEventOwnedByTraiteur(eventId);
+  await prisma.menuItem.updateMany({
+    where: { id: menuItemId, eventId },
+    data: { hidden },
+  });
+  const ev = await prisma.event.findFirst({
+    where: { id: eventId, ownerId: userId },
+    select: { publicSlug: true },
+  });
+  revalidatePath(`/dashboard/evenements/${eventId}`);
+  if (ev) revalidatePath(`/e/${ev.publicSlug}`);
+}
+
+export async function addEventAccessoryAction(formData: FormData) {
+  const eventId = String(formData.get("eventId") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+  const qtyRaw = parseInt(String(formData.get("quantity") ?? "1"), 10);
+  const quantity = Number.isFinite(qtyRaw) && qtyRaw > 0 ? qtyRaw : 1;
+  if (!eventId || !name) return;
+  await assertEventOwnedByTraiteur(eventId);
+  const maxSort = await prisma.eventAccessory.aggregate({
+    where: { eventId },
+    _max: { sortOrder: true },
+  });
+  await prisma.eventAccessory.create({
+    data: {
+      eventId,
+      name,
+      notes,
+      quantity,
+      sortOrder: (maxSort._max.sortOrder ?? 0) + 1,
+    },
+  });
+  revalidatePath(`/dashboard/evenements/${eventId}`);
+}
+
+export async function deleteEventAccessoryAction(formData: FormData) {
+  const eventId = String(formData.get("eventId") ?? "");
+  const accessoryId = String(formData.get("accessoryId") ?? "");
+  if (!eventId || !accessoryId) return;
+  await assertEventOwnedByTraiteur(eventId);
+  await prisma.eventAccessory.deleteMany({
+    where: { id: accessoryId, eventId },
+  });
+  revalidatePath(`/dashboard/evenements/${eventId}`);
 }

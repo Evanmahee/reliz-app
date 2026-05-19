@@ -5,6 +5,7 @@ import { getSessionUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
 import { getT } from "@/i18n/server";
 
 export default async function ParametresPage({
@@ -23,7 +24,7 @@ export default async function ParametresPage({
   const sp = await searchParams;
 
   return (
-    <div className="mx-auto max-w-xl space-y-8">
+    <div className="w-full space-y-8">
       <div>
         <p className="text-xs font-medium text-zinc-400">{t("parametres.tag")}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">
@@ -47,6 +48,14 @@ export default async function ParametresPage({
             {t("parametres.logout")}
           </Button>
         </form>
+      </Card>
+
+      <Card className="space-y-3 px-5 py-6 sm:px-6">
+        <h2 className="text-sm font-semibold text-zinc-900">
+          {t("parametres.language")}
+        </h2>
+        <p className="text-sm text-zinc-500">{t("parametres.languageHint")}</p>
+        <LocaleSwitcher returnTo="/dashboard/parametres" />
       </Card>
 
       <Card className="px-5 py-6 sm:px-6">

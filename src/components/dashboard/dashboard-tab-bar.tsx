@@ -2,16 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  DASHBOARD_NAV_ITEMS,
-  isDashboardNavActive,
-} from "@/lib/dashboard-nav";
+import { isDashboardNavActive, navItemsForRole } from "@/lib/dashboard-nav";
 import { useT } from "@/i18n/i18n-provider";
 import { MaterialSymbol } from "@/components/ui/material-symbol";
 
-export function DashboardTabBar() {
+export function DashboardTabBar({ userRole }: { userRole: string }) {
   const pathname = usePathname();
   const { t } = useT();
+  const navItems = navItemsForRole(userRole).slice(0, 5);
 
   return (
     <nav
@@ -19,7 +17,7 @@ export function DashboardTabBar() {
       aria-label={t("nav.mainNavAria")}
     >
       <ul className="mx-auto flex h-20 max-w-lg items-stretch justify-around px-2">
-        {DASHBOARD_NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const active = isDashboardNavActive(pathname, item.href);
           return (
             <li key={item.href} className="flex min-w-0 flex-1">

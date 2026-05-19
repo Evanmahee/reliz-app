@@ -4,11 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/app/actions/auth";
 import { RelizLogo } from "@/components/brand/reliz-logo";
-import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
-import {
-  DASHBOARD_NAV_ITEMS,
-  isDashboardNavActive,
-} from "@/lib/dashboard-nav";
+import { isDashboardNavActive, navItemsForRole } from "@/lib/dashboard-nav";
 import { useT } from "@/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { MaterialSymbol } from "@/components/ui/material-symbol";
@@ -16,14 +12,15 @@ import { MaterialSymbol } from "@/components/ui/material-symbol";
 export function DashboardSidebar({
   userName,
   userEmail,
-  localeReturnTo,
+  userRole,
 }: {
   userName: string | null;
   userEmail: string;
-  localeReturnTo: string;
+  userRole: string;
 }) {
   const pathname = usePathname();
   const { t } = useT();
+  const navItems = navItemsForRole(userRole);
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex h-svh w-60 flex-col overflow-y-auto border-r border-zinc-200 bg-white max-lg:hidden">
       <Link href="/dashboard" className="block px-5 py-6">
@@ -33,13 +30,10 @@ export function DashboardSidebar({
         </p>
       </Link>
       <nav className="flex flex-col gap-1 px-3 pb-4">
-        <div className="flex items-center justify-between px-2 pb-1 pt-2">
-          <p className="text-[11px] font-medium text-zinc-400">
-            {t("nav.navSection")}
-          </p>
-          <LocaleSwitcher returnTo={localeReturnTo} className="shrink-0" />
-        </div>
-        {DASHBOARD_NAV_ITEMS.map((l) => {
+        <p className="px-2 pb-1 pt-2 text-[11px] font-medium text-zinc-400">
+          {t("nav.navSection")}
+        </p>
+        {navItems.map((l) => {
           const active = isDashboardNavActive(pathname, l.href);
           return (
             <Link

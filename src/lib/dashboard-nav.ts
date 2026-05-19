@@ -6,6 +6,10 @@ export type DashboardNavItem = {
   shortLabelKey: string;
   /** Nom Material Symbols Rounded — https://fonts.google.com/icons */
   icon: string;
+  /** Visible uniquement pour le traiteur (OWNER) */
+  ownerOnly?: boolean;
+  /** Visible uniquement pour le staff */
+  staffOnly?: boolean;
 };
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
@@ -22,16 +26,32 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     icon: "event",
   },
   {
+    href: "/dashboard/taches",
+    labelKey: "nav.tasks",
+    shortLabelKey: "nav.tasks",
+    icon: "assignment",
+    staffOnly: true,
+  },
+  {
+    href: "/dashboard/equipe",
+    labelKey: "nav.team",
+    shortLabelKey: "nav.team",
+    icon: "groups",
+    ownerOnly: true,
+  },
+  {
     href: "/dashboard/checklists",
-    labelKey: "nav.checklists",
-    shortLabelKey: "nav.shortChecklists",
-    icon: "checklist",
+    labelKey: "nav.tasks",
+    shortLabelKey: "nav.tasks",
+    icon: "assignment",
+    ownerOnly: true,
   },
   {
     href: "/dashboard/historique",
     labelKey: "nav.history",
     shortLabelKey: "nav.history",
     icon: "history",
+    ownerOnly: true,
   },
   {
     href: "/dashboard/parametres",
@@ -40,6 +60,15 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     icon: "settings",
   },
 ];
+
+export function navItemsForRole(role: string) {
+  const isStaff = role === "STAFF";
+  return DASHBOARD_NAV_ITEMS.filter((item) => {
+    if (item.ownerOnly && isStaff) return false;
+    if (item.staffOnly && !isStaff) return false;
+    return true;
+  });
+}
 
 export function isDashboardNavActive(pathname: string, href: string) {
   if (href === "/dashboard") {
@@ -56,6 +85,12 @@ export function isDashboardNavActive(pathname: string, href: string) {
       pathname === "/dashboard/checklists" ||
       pathname.startsWith("/dashboard/checklists/")
     );
+  }
+  if (href === "/dashboard/taches") {
+    return pathname === "/dashboard/taches";
+  }
+  if (href === "/dashboard/equipe") {
+    return pathname === "/dashboard/equipe";
   }
   return pathname === href;
 }

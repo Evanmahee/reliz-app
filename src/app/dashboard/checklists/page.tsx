@@ -20,7 +20,7 @@ export default async function ChecklistsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 pb-8">
+    <div className="w-full space-y-8 pb-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-medium text-zinc-400">{t("checklists.listTag")}</p>

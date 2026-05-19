@@ -11,9 +11,11 @@ import type { InstructionBlock } from "@/lib/instructions-blocks";
 export function ChecklistBlocksEditor({
   checklistId,
   initialBlocks,
+  staffMembers = [],
 }: {
   checklistId: string;
   initialBlocks: InstructionBlock[];
+  staffMembers?: { id: string; name: string | null; email: string }[];
 }) {
   const { t } = useT();
   return (
@@ -26,6 +28,7 @@ export function ChecklistBlocksEditor({
       toggleCheckboxAction={toggleChecklistCheckboxAction}
       submitLabel={t("checklists.saveChecklist")}
       submitSuccessMessage={t("checklists.toastChecklist")}
+      staffMembers={staffMembers}
     />
   );
 }

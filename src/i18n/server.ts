@@ -1,10 +1,12 @@
 import "server-only";
 import { getLocale } from "@/i18n/get-locale";
 import { translate } from "@/i18n/translate";
+import de from "@/i18n/messages/de";
 import en from "@/i18n/messages/en";
+import es from "@/i18n/messages/es";
 import fr from "@/i18n/messages/fr";
 
-const dict = { fr, en } as const;
+const dict = { fr, en, es, de } as const;
 
 export async function getMessages() {
   const locale = await getLocale();

@@ -12,7 +12,7 @@ export default async function NouvelleChecklistPage({
   const sp = await searchParams;
 
   return (
-    <div className="mx-auto max-w-xl space-y-8">
+    <div className="w-full space-y-8">
       <div>
         <Link href="/dashboard/checklists" className={outlineButtonClassName}>
           {t("checklists.newBack")}

@@ -15,6 +15,8 @@ export type InstructionCheckboxBlock = {
   id: string;
   label: string;
   checked: boolean;
+  /** Id du serveur/serveuse assigné (optionnel). */
+  assignedToId?: string | null;
 };
 
 export type InstructionBlock =
@@ -54,11 +56,17 @@ export function parseInstructionsBlocks(
         typeof o.id === "string" &&
         typeof o.label === "string"
       ) {
+        const assignedRaw = o.assignedToId;
+        const assignedToId =
+          typeof assignedRaw === "string" && assignedRaw.trim()
+            ? assignedRaw.trim()
+            : null;
         out.push({
           type: "checkbox",
           id: o.id,
           label: clampLabel(o.label),
           checked: Boolean(o.checked),
+          assignedToId,
         });
       }
       if (out.length >= INSTRUCTIONS_MAX_BLOCKS) break;
@@ -118,6 +126,7 @@ export function cloneBlocksWithNewIds(blocks: InstructionBlock[]): InstructionBl
           id: nanoid(),
           label: b.label,
           checked: b.checked,
+          assignedToId: b.assignedToId ?? null,
         },
   );
 }

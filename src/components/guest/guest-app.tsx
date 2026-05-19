@@ -13,6 +13,7 @@ type MenuItem = {
   name: string;
   description: string;
   outOfStock: boolean;
+  hidden?: boolean;
 };
 
 type Tab = "carte" | "services" | "personnel";
@@ -20,10 +21,12 @@ type Tab = "carte" | "services" | "personnel";
 export function GuestApp({
   publicSlug,
   eventName,
+  menuHidden,
   menuItems,
 }: {
   publicSlug: string;
   eventName: string;
+  menuHidden: boolean;
   menuItems: MenuItem[];
 }) {
   const { t, messages } = useT();
@@ -31,9 +34,11 @@ export function GuestApp({
     .serviceIdeas as unknown as readonly string[];
 
   const storageKey = `reliz_table_${publicSlug}`;
+  const locationKey = `reliz_table_loc_${publicSlug}`;
   const [hydrated, setHydrated] = useState(false);
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [tableDraft, setTableDraft] = useState("");
+  const [locationDraft, setLocationDraft] = useState("");
   const [tab, setTab] = useState<Tab>("carte");
   const [pending, start] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -45,8 +50,9 @@ export function GuestApp({
 
   useEffect(() => {
     setTableNumber(sessionStorage.getItem(storageKey));
+    setLocationDraft(sessionStorage.getItem(locationKey) ?? "");
     setHydrated(true);
-  }, [storageKey]);
+  }, [storageKey, locationKey]);
 
   function saveTable(e: React.FormEvent) {
     e.preventDefault();
@@ -56,6 +62,7 @@ export function GuestApp({
       return;
     }
     sessionStorage.setItem(storageKey, v);
+    sessionStorage.setItem(locationKey, locationDraft.trim());
     setTableNumber(v);
     setTableDraft("");
     setError(null);
@@ -63,7 +70,9 @@ export function GuestApp({
 
   function clearTable() {
     sessionStorage.removeItem(storageKey);
+    sessionStorage.removeItem(locationKey);
     setTableNumber(null);
+    setLocationDraft("");
     setTab("carte");
   }
 
@@ -77,9 +86,15 @@ export function GuestApp({
       if (!tableNumber) return;
       setError(null);
       start(async () => {
+        const loc =
+          (typeof sessionStorage !== "undefined"
+            ? sessionStorage.getItem(locationKey)
+            : null) ??
+          locationDraft.trim();
         const res = await submitGuestRequest({
           publicSlug,
           tableNumber,
+          tableLocation: loc || undefined,
           type,
           message,
         });
@@ -93,7 +108,7 @@ export function GuestApp({
         setServiceText("");
       });
     },
-    [publicSlug, tableNumber, t],
+    [publicSlug, tableNumber, locationDraft, locationKey, t],
   );
 
   if (!hydrated) {
@@ -124,6 +139,17 @@ export function GuestApp({
               autoComplete="off"
             />
           </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-zinc-500">
+              {t("guest.tableLocationLabel")}
+            </label>
+            <Input
+              placeholder={t("guest.tableLocationPh")}
+              value={locationDraft}
+              onChange={(e) => setLocationDraft(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <Button type="submit" className="w-full">
             {t("guest.continue")}
@@ -133,11 +159,18 @@ export function GuestApp({
     );
   }
 
+  const visibleMenu = menuItems.filter((m) => !m.hidden);
   const tabs: { id: Tab; label: string }[] = [
-    { id: "carte", label: t("guest.tabMenu") },
+    ...(!menuHidden
+      ? [{ id: "carte" as Tab, label: t("guest.tabMenu") }]
+      : []),
     { id: "services", label: t("guest.tabService") },
     { id: "personnel", label: t("guest.tabStaff") },
   ];
+  const activeTab =
+    tab === "carte" && (menuHidden || tabs.every((x) => x.id !== "carte"))
+      ? "services"
+      : tab;
 
   return (
     <div className="space-y-6">
@@ -172,7 +205,7 @@ export function GuestApp({
             type="button"
             onClick={() => setTab(id)}
             className={`flex-1 rounded-[1.15rem] py-2.5 text-sm font-medium transition-colors ${
-              tab === id
+              activeTab === id
                 ? "bg-white text-zinc-900"
                 : "text-zinc-500 hover:text-zinc-800"
             }`}
@@ -182,16 +215,16 @@ export function GuestApp({
         ))}
       </div>
 
-      {tab === "carte" ? (
+      {activeTab === "carte" ? (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-zinc-900">{t("guest.menuTitle")}</h2>
           <ul className="space-y-3">
-            {menuItems.length === 0 ? (
+            {visibleMenu.length === 0 ? (
               <li className="rounded-[1.35rem] border border-zinc-100 bg-white px-4 py-6 text-center text-sm text-zinc-500">
                 {t("guest.menuEmpty")}
               </li>
             ) : (
-              menuItems.map((item) => (
+              visibleMenu.map((item) => (
                 <li
                   key={item.id}
                   className="rounded-[1.35rem] border border-zinc-100 bg-white px-4 py-4"
@@ -264,9 +297,13 @@ export function GuestApp({
                         : base;
                       setError(null);
                       start(async () => {
+                        const loc =
+                          sessionStorage.getItem(locationKey) ??
+                          locationDraft.trim();
                         const res = await submitGuestRequest({
                           publicSlug,
                           tableNumber,
+                          tableLocation: loc || undefined,
                           type: GUEST_REQUEST.PRODUCT,
                           message: msg,
                         });
@@ -289,7 +326,7 @@ export function GuestApp({
         </section>
       ) : null}
 
-      {tab === "services" ? (
+      {activeTab === "services" ? (
         <section className="rounded-[1.75rem] border border-zinc-100 bg-white px-4 py-5 space-y-4">
           <h2 className="text-sm font-semibold text-zinc-900">
             {t("guest.serviceTitle")}
@@ -325,7 +362,7 @@ export function GuestApp({
         </section>
       ) : null}
 
-      {tab === "personnel" ? (
+      {activeTab === "personnel" ? (
         <section className="rounded-[1.75rem] border border-zinc-100 bg-white px-4 py-8 text-center space-y-4">
           <h2 className="text-sm font-semibold text-zinc-900">{t("guest.staffTitle")}</h2>
           <p className="text-sm text-zinc-500">

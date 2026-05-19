@@ -9,6 +9,10 @@
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx prisma/seed.ts",
+    "db:sql-staff": "node scripts/prisma-env.mjs db execute --file prisma/supabase-staff-features.sql --schema prisma/schema.prisma",
+    "db:migrate": "node scripts/prisma-env.mjs migrate deploy",
+    "db:migrate:dev": "node scripts/prisma-env.mjs migrate dev",
+    "db:generate": "node scripts/prisma-env.mjs generate",
     "postinstall": "prisma generate"
   },
   "prisma": {
