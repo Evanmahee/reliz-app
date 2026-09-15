@@ -21,7 +21,6 @@ import { useT } from "@/i18n/i18n-provider";
 type ClaimedBy = {
   id: string;
   name: string | null;
-  email: string;
 } | null;
 
 type Row = {

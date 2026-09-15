@@ -9,7 +9,6 @@ import { useT } from "@/i18n/i18n-provider";
 type ClaimedBy = {
   id: string;
   name: string | null;
-  email: string;
 } | null;
 
 export function RequestClaimControls({
@@ -35,9 +34,7 @@ export function RequestClaimControls({
   if (status === GUEST_REQUEST_STATUS.DONE) return null;
 
   const claimedName =
-    claimedBy?.name?.trim() ||
-    claimedBy?.email ||
-    t("user.defaultName");
+    claimedBy?.name?.trim() || t("user.defaultName");
   const isEscalated = status === GUEST_REQUEST_STATUS.ESCALATED;
   const isClaimed = Boolean(claimedById);
   const isMine = claimedById === currentUserId;

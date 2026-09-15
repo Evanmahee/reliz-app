@@ -45,7 +45,7 @@ export async function PATCH(
       status: GUEST_REQUEST_STATUS.PENDING,
     },
     include: {
-      claimedBy: { select: { id: true, name: true, email: true } },
+      claimedBy: { select: { id: true, name: true } },
     },
   });
 

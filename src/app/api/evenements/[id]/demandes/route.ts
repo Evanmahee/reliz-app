@@ -24,7 +24,7 @@ export async function GET(
   const requests = await prisma.guestRequest.findMany({
     where: { eventId: id },
     include: {
-      claimedBy: { select: { id: true, name: true, email: true } },
+      claimedBy: { select: { id: true, name: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 120,

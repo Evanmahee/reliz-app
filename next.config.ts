@@ -40,7 +40,7 @@ function nextPublicUrlLooksLocal(pub: string): boolean {
  * En dev (`next dev`) et en prod locale (`next start` + URL dans .env), on autorise les combinaisons courantes.
  */
 function buildServerActionAllowedOrigins(): string[] {
-  const origins = new Set<string>(["*.vercel.app"]);
+  const origins = new Set<string>(["reliz-app.vercel.app"]);
 
   const extra = process.env.SERVER_ACTIONS_ALLOWED_ORIGINS?.trim();
   if (extra) {

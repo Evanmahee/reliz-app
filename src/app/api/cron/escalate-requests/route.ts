@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import {
   EVENT_STATUS,
@@ -6,19 +7,23 @@ import {
 } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
+function timingSafeEqualString(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
 function authorizeCron(req: Request): boolean {
   const secret = process.env.CRON_SECRET?.trim();
   if (!secret) return false;
 
-  const headerSecret =
-    req.headers.get("cron_secret")?.trim() ||
-    req.headers.get("x-cron-secret")?.trim();
-  if (headerSecret && headerSecret === secret) return true;
-
   const auth = req.headers.get("authorization")?.trim();
-  if (auth === `Bearer ${secret}`) return true;
+  if (!auth?.startsWith("Bearer ")) return false;
+  const token = auth.slice("Bearer ".length).trim();
+  if (!token) return false;
 
-  return false;
+  return timingSafeEqualString(token, secret);
 }
 
 async function escalateAssigneeId(ownerId: string): Promise<string> {

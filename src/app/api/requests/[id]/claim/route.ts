@@ -83,7 +83,7 @@ export async function PATCH(
   const row = await prisma.guestRequest.findUnique({
     where: { id },
     include: {
-      claimedBy: { select: { id: true, name: true, email: true } },
+      claimedBy: { select: { id: true, name: true } },
     },
   });
 
