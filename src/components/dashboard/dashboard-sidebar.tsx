@@ -66,7 +66,7 @@ export function DashboardSidebar({
           <LocaleSwitcher returnTo={pathname} className="mt-3" />
         </div>
         <form action={logoutAction} className="mt-3">
-          <Button type="submit" variant="ghost" className="w-full justify-start">
+          <Button type="submit" variant="outline" className="w-full justify-start">
             {t("nav.logout")}
           </Button>
         </form>
