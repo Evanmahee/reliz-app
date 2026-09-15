@@ -20,8 +20,11 @@ export default async function EquipePage({
 
   const [staff, events] = await Promise.all([
     prisma.user.findMany({
-      where: { employerId: user.id, role: USER_ROLE.STAFF },
-      orderBy: { createdAt: "desc" },
+      where: {
+        employerId: user.id,
+        role: { in: [USER_ROLE.STAFF, USER_ROLE.MAITRE_HOTEL] },
+      },
+      orderBy: [{ role: "asc" }, { createdAt: "desc" }],
       include: { staffEventAccess: { select: { eventId: true } } },
     }),
     prisma.event.findMany({
@@ -50,6 +53,7 @@ export default async function EquipePage({
           id: s.id,
           name: s.name,
           email: s.email,
+          role: s.role,
           eventIds: s.staffEventAccess.map((a) => a.eventId),
         }))}
         events={events}

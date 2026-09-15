@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { loginAction } from "@/app/actions/auth";
+import { ConnexionErrorBanner } from "@/components/auth/connexion-error-banner";
 import { LoginShowcase } from "@/components/auth/login-showcase";
 import { PasswordField } from "@/components/auth/password-field";
 import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
@@ -14,6 +16,12 @@ export default async function ConnexionPage({
 }) {
   const { t } = await getT();
   const sp = await searchParams;
+
+  // Ancien redirect « serveur » souvent obsolète (HMR) — on nettoie l’URL.
+  if (sp.erreur === "serveur") {
+    redirect("/connexion");
+  }
+
   let msg: string | null = null;
   if (sp.erreur === "identifiants") {
     msg = t("connexion.errors.identifiants");
@@ -25,8 +33,6 @@ export default async function ConnexionPage({
     msg = t("connexion.errors.db");
   } else if (sp.erreur === "session") {
     msg = t("connexion.errors.session");
-  } else if (sp.erreur === "serveur") {
-    msg = t("connexion.errors.serveur");
   }
 
   return (
@@ -48,11 +54,7 @@ export default async function ConnexionPage({
           </h1>
 
           <form action={loginAction} className="mt-8 space-y-5">
-            {msg ? (
-              <p className="rounded-[1rem] bg-red-50 px-3 py-2 text-sm text-red-700">
-                {msg}
-              </p>
-            ) : null}
+            {msg ? <ConnexionErrorBanner message={msg} /> : null}
 
             <div>
               <label
@@ -67,22 +69,17 @@ export default async function ConnexionPage({
                 type="email"
                 autoComplete="email"
                 required
-                placeholder="vous@exemple.com"
+                placeholder={t("connexion.emailPh")}
               />
             </div>
 
             <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium text-zinc-700"
-                >
-                  {t("connexion.password")}
-                </label>
-                <span className="text-xs text-zinc-400">
-                  {t("connexion.forgotPassword")}
-                </span>
-              </div>
+              <label
+                htmlFor="password"
+                className="mb-1.5 block text-sm font-medium text-zinc-700"
+              >
+                {t("connexion.password")}
+              </label>
               <PasswordField />
             </div>
 
@@ -90,17 +87,6 @@ export default async function ConnexionPage({
               {t("connexion.submit")}
             </Button>
           </form>
-
-          <p className="mt-8 text-center text-sm text-zinc-500">
-            {t("connexion.demo")}{" "}
-            <span className="font-medium text-zinc-800">demo@reliz.app</span>
-            {" / "}
-            <span className="font-medium text-zinc-800">demo1234</span>
-          </p>
-
-          <p className="mt-6 text-center text-xs text-zinc-400">
-            {t("connexion.guestScanHint")}
-          </p>
         </div>
       </div>
     </div>

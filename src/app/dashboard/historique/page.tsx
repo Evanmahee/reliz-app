@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS } from "@/lib/constants";
+import { getSessionUser, isOwner } from "@/lib/event-access";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 import { dateLocaleTag } from "@/i18n/date-locale";
@@ -12,6 +13,8 @@ export default async function HistoriquePage() {
   const dateTag = dateLocaleTag(locale);
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
+  const user = await getSessionUser(userId);
+  if (!user || !isOwner(user)) redirect("/dashboard");
   const events = await prisma.event.findMany({
     where: { ownerId: userId, status: EVENT_STATUS.ARCHIVED },
     orderBy: { updatedAt: "desc" },

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS, USER_ROLE } from "@/lib/constants";
-import { getSessionUser, getOwnerId, isOwner } from "@/lib/event-access";
+import { getSessionUser, getOwnerId, isOwner, canManageEventOps } from "@/lib/event-access";
 import { toDatetimeLocalValue } from "@/lib/datetime";
 import { parseInstructionsBlocks } from "@/lib/instructions-blocks";
 import { parseShoppingItems } from "@/lib/shopping-items";
@@ -27,15 +27,18 @@ export default async function EventDetailPage({
   if (!sessionUser) redirect("/connexion");
   const ownerId = getOwnerId(sessionUser);
   const ownerView = isOwner(sessionUser);
+  const maitreView = sessionUser.role === USER_ROLE.MAITRE_HOTEL;
 
   const event = await prisma.event.findFirst({
     where: ownerView
       ? { id, ownerId: sessionUser.id }
-      : {
-          id,
-          ownerId,
-          staffAccess: { some: { userId: sessionUser.id } },
-        },
+      : maitreView
+        ? { id, ownerId }
+        : {
+            id,
+            ownerId,
+            staffAccess: { some: { userId: sessionUser.id } },
+          },
     include: {
       menuItems: { orderBy: { sortOrder: "asc" } },
       accessories: { orderBy: { sortOrder: "asc" } },
@@ -114,6 +117,7 @@ export default async function EventDetailPage({
         eventId={event.id}
         archived={archived}
         isOwner={isOwner(sessionUser)}
+        canManageOps={canManageEventOps(sessionUser)}
         name={event.name}
         venue={event.venue}
         menuHidden={event.menuHidden}
@@ -135,13 +139,18 @@ export default async function EventDetailPage({
         shoppingList={shoppingList}
         staffMembers={staffMembers}
         guestUrl={guestUrl}
+        publicSlug={event.publicSlug}
         qrDownloadHref={`/api/evenements/${event.id}/qr`}
       />
 
       {!archived ? (
         <>
           <Card className="px-5 py-6 sm:px-6">
-            <EventRequestsLive eventId={event.id} />
+            <EventRequestsLive
+              eventId={event.id}
+              currentUserId={sessionUser.id}
+              currentUserRole={sessionUser.role}
+            />
           </Card>
         </>
       ) : null}

@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { updateStaffEventsAction } from "@/app/actions/staff";
+import {
+  updateStaffEventsAction,
+  updateStaffRoleAction,
+} from "@/app/actions/staff";
+import { USER_ROLE } from "@/lib/constants";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button, primaryButtonClassName } from "@/components/ui/button";
@@ -14,6 +18,7 @@ type StaffRow = {
   id: string;
   name: string | null;
   email: string;
+  role: string;
   eventIds: string[];
 };
 
@@ -27,6 +32,7 @@ function StaffCreateForm({
   onCancel: () => void;
 }) {
   const { t } = useT();
+  const [role, setRole] = useState<string>(USER_ROLE.STAFF);
   const createWrapped = useMemo(
     () =>
       wrapFormActionWithToast(createAction, {
@@ -46,29 +52,56 @@ function StaffCreateForm({
         minLength={8}
         required
       />
-      {events.length > 0 ? (
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-medium text-zinc-500">
-            {t("equipe.eventsAccess")}
-          </legend>
-          {events.map((ev) => (
-            <label
-              key={ev.id}
-              className="flex items-center gap-2 text-sm text-zinc-700"
-            >
-              <input type="checkbox" name="eventIds" value={ev.id} className="rounded" />
-              {ev.name}
-            </label>
-          ))}
-        </fieldset>
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-zinc-500">
+          {t("equipe.roleLabel")}
+        </label>
+        <select
+          name="role"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          className="w-full rounded-[1.35rem] border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900"
+        >
+          <option value={USER_ROLE.STAFF}>{t("roles.STAFF")}</option>
+          <option value={USER_ROLE.MAITRE_HOTEL}>
+            {t("roles.MAITRE_HOTEL")}
+          </option>
+        </select>
+      </div>
+      {role === USER_ROLE.STAFF ? (
+        events.length > 0 ? (
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-medium text-zinc-500">
+              {t("equipe.eventsAccess")}
+            </legend>
+            {events.map((ev) => (
+              <label
+                key={ev.id}
+                className="flex items-center gap-2 text-sm text-zinc-700"
+              >
+                <input
+                  type="checkbox"
+                  name="eventIds"
+                  value={ev.id}
+                  className="rounded"
+                />
+                {ev.name}
+              </label>
+            ))}
+          </fieldset>
+        ) : (
+          <p className="text-xs text-zinc-500">{t("equipe.noLiveEvents")}</p>
+        )
       ) : (
-        <p className="text-xs text-zinc-500">{t("equipe.noLiveEvents")}</p>
+        <p className="text-xs text-zinc-500">{t("equipe.maitreAccessHint")}</p>
       )}
       <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("equipe.cancel")}
         </Button>
-        <SubmitButton pendingLabel={t("equipe.creating")}>{t("equipe.create")}</SubmitButton>
+        <SubmitButton pendingLabel={t("equipe.creating")}>
+          {t("equipe.create")}
+        </SubmitButton>
       </div>
     </form>
   );
@@ -88,6 +121,11 @@ export function StaffTeamManager({
   const { t } = useT();
   const [modalOpen, setModalOpen] = useState(false);
 
+  function roleLabel(role: string) {
+    if (role === USER_ROLE.MAITRE_HOTEL) return t("roles.MAITRE_HOTEL");
+    return t("roles.STAFF");
+  }
+
   return (
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -96,7 +134,9 @@ export function StaffTeamManager({
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">
             {t("equipe.title")}
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-zinc-500">{t("equipe.subtitle")}</p>
+          <p className="mt-2 max-w-xl text-sm text-zinc-500">
+            {t("equipe.subtitle")}
+          </p>
         </div>
         <button
           type="button"
@@ -121,7 +161,9 @@ export function StaffTeamManager({
       </Modal>
 
       <Card className="px-5 py-6 sm:px-6">
-        <h2 className="text-sm font-semibold text-zinc-900">{t("equipe.listTitle")}</h2>
+        <h2 className="text-sm font-semibold text-zinc-900">
+          {t("equipe.listTitle")}
+        </h2>
         {staff.length === 0 ? (
           <p className="mt-4 text-sm text-zinc-500">{t("equipe.empty")}</p>
         ) : (
@@ -130,7 +172,14 @@ export function StaffTeamManager({
               <li key={s.id} className="py-4 first:pt-0">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="font-medium text-zinc-900">{s.name || s.email}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium text-zinc-900">
+                        {s.name || s.email}
+                      </p>
+                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600">
+                        {roleLabel(s.role)}
+                      </span>
+                    </div>
                     <p className="text-sm text-zinc-500">{s.email}</p>
                   </div>
                   <form action={deleteAction}>
@@ -144,7 +193,39 @@ export function StaffTeamManager({
                     </SubmitButton>
                   </form>
                 </div>
-                {events.length > 0 ? (
+
+                <form
+                  action={wrapFormActionWithToast(updateStaffRoleAction, {
+                    success: t("equipe.toastRole"),
+                  })}
+                  className="mt-3 flex flex-wrap items-end gap-2"
+                >
+                  <input type="hidden" name="staffId" value={s.id} />
+                  <div className="min-w-[12rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-zinc-500">
+                      {t("equipe.roleLabel")}
+                    </label>
+                    <select
+                      name="role"
+                      defaultValue={s.role}
+                      className="w-full rounded-[1.15rem] border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900"
+                    >
+                      <option value={USER_ROLE.STAFF}>{t("roles.STAFF")}</option>
+                      <option value={USER_ROLE.MAITRE_HOTEL}>
+                        {t("roles.MAITRE_HOTEL")}
+                      </option>
+                    </select>
+                  </div>
+                  <SubmitButton
+                    variant="outline"
+                    className="text-xs"
+                    pendingLabel="…"
+                  >
+                    {t("equipe.saveRole")}
+                  </SubmitButton>
+                </form>
+
+                {s.role === USER_ROLE.STAFF && events.length > 0 ? (
                   <form
                     action={wrapFormActionWithToast(updateStaffEventsAction, {
                       success: t("equipe.toastAccess"),
@@ -170,10 +251,18 @@ export function StaffTeamManager({
                         {ev.name}
                       </label>
                     ))}
-                    <SubmitButton variant="outline" className="text-xs" pendingLabel="…">
+                    <SubmitButton
+                      variant="outline"
+                      className="text-xs"
+                      pendingLabel="…"
+                    >
                       {t("equipe.saveAccess")}
                     </SubmitButton>
                   </form>
+                ) : s.role === USER_ROLE.MAITRE_HOTEL ? (
+                  <p className="mt-3 text-xs text-zinc-500">
+                    {t("equipe.maitreAccessHint")}
+                  </p>
                 ) : null}
               </li>
             ))}

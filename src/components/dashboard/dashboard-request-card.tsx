@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { AllergyWarningBadge } from "@/components/dashboard/allergy-warning-badge";
 import { MaterialSymbol } from "@/components/ui/material-symbol";
-import { GUEST_REQUEST } from "@/lib/constants";
+import { GUEST_REQUEST, GUEST_REQUEST_STATUS } from "@/lib/constants";
+import {
+  normalizeRequestCategory,
+  REQUEST_CATEGORY_STYLES,
+} from "@/lib/request-category";
 import {
   getRequestUrgency,
   urgencyWaitMinutes,
@@ -41,13 +46,21 @@ export function DashboardRequestCard({
   venue,
   tableNumber,
   tableLocation,
+  allergyContent,
   type,
   typeLabel,
+  category,
+  categoryLabel,
   message,
   status,
+  claimedByName,
+  claimedByOther,
   urgencyLabels,
   pendingLabel,
   doneLabel,
+  claimedByLabel,
+  lockedLabel,
+  escalatedLabel,
   tablePrefix,
   venuePrefix,
   minLabel,
@@ -58,13 +71,21 @@ export function DashboardRequestCard({
   venue: string;
   tableNumber: string;
   tableLocation: string;
+  allergyContent?: string;
   type: string;
   typeLabel: string;
+  category?: string | null;
+  categoryLabel?: string;
   message: string;
   status: string;
+  claimedByName?: string | null;
+  claimedByOther?: boolean;
   urgencyLabels: Record<RequestUrgency, string>;
   pendingLabel: string;
   doneLabel: string;
+  claimedByLabel?: string;
+  lockedLabel?: string;
+  escalatedLabel?: string;
   tablePrefix: string;
   venuePrefix: string;
   minLabel: string;
@@ -76,36 +97,66 @@ export function DashboardRequestCard({
     text: "text-zinc-800",
     icon: "notifications",
   };
-  const isPending = status === "PENDING";
+  const cat = normalizeRequestCategory(category);
+  const catStyles = REQUEST_CATEGORY_STYLES[cat];
+  const isEscalated = status === GUEST_REQUEST_STATUS.ESCALATED;
+  const isActive =
+    status === GUEST_REQUEST_STATUS.PENDING ||
+    status === GUEST_REQUEST_STATUS.IN_PROGRESS ||
+    isEscalated;
+  const isDone = status === GUEST_REQUEST_STATUS.DONE;
 
   return (
     <li>
       <Link
         href={href}
-        className={`flex gap-3 px-4 py-4 transition-colors hover:bg-zinc-50 sm:gap-4 ${isPending ? "bg-white" : "bg-zinc-50/50"}`}
+        className={`flex gap-3 border-l-4 px-4 py-4 transition-colors hover:bg-zinc-50 sm:gap-4 ${
+          isEscalated ? "border-l-red-600 bg-red-50/90" : catStyles.border
+        } ${
+          claimedByOther && !isEscalated
+            ? "bg-zinc-100/80 opacity-70"
+            : isActive
+              ? isEscalated
+                ? ""
+                : "bg-white"
+              : "bg-zinc-50/50"
+        }`}
       >
         <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${styles.bg}`}
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+            isEscalated ? "bg-red-100" : styles.bg
+          }`}
         >
           <MaterialSymbol
-            name={styles.icon}
+            name={isEscalated ? "priority_high" : styles.icon}
             filled
             size={22}
-            className={styles.text}
+            className={isEscalated ? "text-red-800" : styles.text}
           />
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-lg font-bold tabular-nums tracking-tight text-zinc-900">
-              {tablePrefix} {tableNumber}
+              {tableLocation
+                ? `${tablePrefix} ${tableNumber} — ${tableLocation}`
+                : `${tablePrefix} ${tableNumber}`}
             </span>
-            {tableLocation ? (
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
-                {tableLocation}
+            {allergyContent ? (
+              <AllergyWarningBadge content={allergyContent} compact />
+            ) : null}
+            {categoryLabel ? (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${catStyles.badge}`}
+              >
+                {categoryLabel}
               </span>
             ) : null}
-            {isPending ? (
+            {isEscalated && escalatedLabel ? (
+              <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-800">
+                {escalatedLabel}
+              </span>
+            ) : isActive ? (
               <span
                 className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${URGENCY_BADGE[urgency]}`}
               >
@@ -117,9 +168,28 @@ export function DashboardRequestCard({
                 {doneLabel}
               </span>
             )}
+            {claimedByName && claimedByLabel ? (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                  isEscalated
+                    ? "bg-red-50 text-red-800"
+                    : claimedByOther
+                      ? "bg-zinc-200 text-zinc-600"
+                      : "bg-violet-50 text-violet-900"
+                }`}
+              >
+                {claimedByLabel.replace("{name}", claimedByName)}
+              </span>
+            ) : null}
           </div>
 
-          <p className={`mt-1 text-sm font-semibold ${styles.text}`}>{typeLabel}</p>
+          <p
+            className={`mt-1 text-sm font-semibold ${
+              isEscalated ? "text-red-900" : styles.text
+            }`}
+          >
+            {typeLabel}
+          </p>
           <p className="mt-0.5 line-clamp-2 text-sm text-zinc-700">{message}</p>
 
           <p className="mt-2 text-xs text-zinc-400">
@@ -135,9 +205,19 @@ export function DashboardRequestCard({
           </p>
         </div>
 
-        {isPending ? (
-          <span className="hidden shrink-0 self-start rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-900 sm:inline">
-            {pendingLabel}
+        {claimedByOther && lockedLabel ? (
+          <span className="hidden shrink-0 self-start rounded-full bg-zinc-200 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 sm:inline">
+            {lockedLabel}
+          </span>
+        ) : isActive && !isDone ? (
+          <span
+            className={`hidden shrink-0 self-start rounded-full px-2.5 py-0.5 text-[11px] font-medium sm:inline ${
+              isEscalated
+                ? "bg-red-100 text-red-800"
+                : "bg-amber-50 text-amber-900"
+            }`}
+          >
+            {isEscalated && escalatedLabel ? escalatedLabel : pendingLabel}
           </span>
         ) : null}
       </Link>

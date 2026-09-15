@@ -43,3 +43,60 @@ body {
   border-radius: 1rem;
 }
 
+/* Impression étiquettes QR (tables) */
+@media print {
+  @page {
+    margin: 0 !important;
+    size: auto;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .qr-label-print-root,
+  .qr-label-print-root * {
+    visibility: visible !important;
+  }
+
+  .qr-label-print-root {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .qr-label-print-controls {
+    display: none !important;
+  }
+
+  .qr-label-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .qr-label-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+}
+

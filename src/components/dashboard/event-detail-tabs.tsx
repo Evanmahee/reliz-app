@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   addEventAccessoryAction,
   addMenuItemAction,
@@ -21,6 +21,10 @@ import {
   type EventShoppingListData,
 } from "@/components/dashboard/event-shopping-panel";
 import { EventQrCard } from "@/components/dashboard/event-qr-card";
+import {
+  EventTablesPanel,
+  type EventTableRow,
+} from "@/components/dashboard/event-tables-panel";
 import { Card } from "@/components/ui/card";
 import { wrapFormActionWithToast } from "@/components/ui/form-action-toast";
 import { Input } from "@/components/ui/input";
@@ -29,7 +33,14 @@ import { dateLocaleTag } from "@/i18n/date-locale";
 import { useT } from "@/i18n/i18n-provider";
 import type { InstructionBlock } from "@/lib/instructions-blocks";
 
-type TabId = "infos" | "consignes" | "menu" | "accessories" | "shopping" | "qr";
+type TabId =
+  | "infos"
+  | "consignes"
+  | "menu"
+  | "accessories"
+  | "shopping"
+  | "tables"
+  | "qr";
 
 const TAB_IDS: TabId[] = [
   "infos",
@@ -37,6 +48,7 @@ const TAB_IDS: TabId[] = [
   "menu",
   "accessories",
   "shopping",
+  "tables",
   "qr",
 ];
 
@@ -59,6 +71,7 @@ export function EventDetailTabs({
   eventId,
   archived,
   isOwner,
+  canManageOps,
   name,
   venue,
   menuHidden,
@@ -69,11 +82,13 @@ export function EventDetailTabs({
   shoppingList,
   staffMembers,
   guestUrl,
+  publicSlug,
   qrDownloadHref,
 }: {
   eventId: string;
   archived: boolean;
   isOwner: boolean;
+  canManageOps: boolean;
   name: string;
   venue: string;
   menuHidden: boolean;
@@ -84,11 +99,13 @@ export function EventDetailTabs({
   shoppingList: EventShoppingListData | null;
   staffMembers: { id: string; name: string | null; email: string }[];
   guestUrl: string;
+  publicSlug: string;
   qrDownloadHref: string;
 }) {
   const { t, locale } = useT();
   const uid = useId();
   const [tab, setTab] = useState<TabId>("infos");
+  const [tables, setTables] = useState<EventTableRow[]>([]);
 
   const tabLabels = useMemo(
     () => ({
@@ -97,6 +114,7 @@ export function EventDetailTabs({
       menu: t("events.tabs.menu"),
       accessories: t("events.tabs.accessories"),
       shopping: t("events.tabs.shopping"),
+      tables: t("events.tabs.tables"),
       qr: t("events.tabs.qr"),
     }),
     [t],
@@ -104,9 +122,15 @@ export function EventDetailTabs({
 
   const visibleTabs = isOwner
     ? TAB_IDS
-    : TAB_IDS.filter(
-        (id) => id !== "infos" && id !== "qr" && id !== "shopping",
-      );
+    : canManageOps
+      ? TAB_IDS.filter((id) => id !== "infos" && id !== "shopping")
+      : TAB_IDS.filter(
+          (id) =>
+            id !== "infos" &&
+            id !== "qr" &&
+            id !== "shopping" &&
+            id !== "tables",
+        );
 
   const updateInfosWrapped = useMemo(
     () =>
@@ -245,10 +269,15 @@ export function EventDetailTabs({
                 blocks={instructionBlocks}
                 staffMembers={staffMembers}
               />
-            ) : (
+            ) : canManageOps ? (
               <ConsignesEditor
                 eventId={eventId}
                 initialBlocks={instructionBlocks}
+                staffMembers={staffMembers}
+              />
+            ) : (
+              <ConsignesReadOnly
+                blocks={instructionBlocks}
                 staffMembers={staffMembers}
               />
             )}
@@ -270,7 +299,7 @@ export function EventDetailTabs({
             <h2 className="text-sm font-semibold text-zinc-900">
               {t("events.menuTitle")}
             </h2>
-            {!archived && isOwner ? (
+            {!archived && canManageOps ? (
               <form
                 action={wrapFormActionWithToast(toggleEventMenuHiddenAction, {
                   success: t("events.toast.menuVisibility"),
@@ -293,7 +322,7 @@ export function EventDetailTabs({
                 {t("events.menuHiddenHint")}
               </p>
             ) : null}
-            {!archived && isOwner ? (
+            {!archived && canManageOps ? (
               <form action={addMenuWrapped} className="mt-4 space-y-3">
                 <input type="hidden" name="eventId" value={eventId} />
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -345,7 +374,7 @@ export function EventDetailTabs({
                         </span>
                       ) : null}
                     </div>
-                    {!archived && isOwner ? (
+                    {!archived && canManageOps ? (
                       <div className="flex flex-wrap gap-2">
                         <form
                           action={wrapFormActionWithToast(toggleMenuItemHiddenAction, {
@@ -419,7 +448,7 @@ export function EventDetailTabs({
               {t("events.accessoriesTitle")}
             </h2>
             <p className="mt-1 text-xs text-zinc-500">{t("events.accessoriesHint")}</p>
-            {!archived && isOwner ? (
+            {!archived && canManageOps ? (
               <form
                 action={wrapFormActionWithToast(addEventAccessoryAction, {
                   success: t("events.toast.accessoryAdded"),
@@ -453,7 +482,7 @@ export function EventDetailTabs({
                         <p className="mt-0.5 text-sm text-zinc-500">{a.notes}</p>
                       ) : null}
                     </div>
-                    {!archived && isOwner ? (
+                    {!archived && canManageOps ? (
                       <form
                         action={wrapFormActionWithToast(deleteEventAccessoryAction, {
                           success: t("events.toast.accessoryRemoved"),
@@ -491,6 +520,20 @@ export function EventDetailTabs({
           </div>
         ) : null}
 
+        {tab === "tables" ? (
+          <div
+            role="tabpanel"
+            id={`${uid}-panel-tables`}
+            aria-labelledby={`${uid}-tab-tables`}
+          >
+            <EventTablesPanel
+              eventId={eventId}
+              archived={archived}
+              onTablesChange={setTables}
+            />
+          </div>
+        ) : null}
+
         {tab === "qr" ? (
           <div
             role="tabpanel"
@@ -504,12 +547,65 @@ export function EventDetailTabs({
               <p className="mt-4 text-sm text-zinc-500">{t("events.qrArchived")}</p>
             ) : (
               <div className="mt-4">
-                <EventQrCard url={guestUrl} downloadHref={qrDownloadHref} />
+                <EventQrTablesBridge
+                  eventId={eventId}
+                  guestUrl={guestUrl}
+                  publicSlug={publicSlug}
+                  qrDownloadHref={qrDownloadHref}
+                  tables={tables}
+                  onTablesLoaded={setTables}
+                />
               </div>
             )}
           </div>
         ) : null}
       </Card>
     </div>
+  );
+}
+
+/** Charge les tables pour l’onglet QR si pas encore chargées. */
+function EventQrTablesBridge({
+  eventId,
+  guestUrl,
+  publicSlug,
+  qrDownloadHref,
+  tables,
+  onTablesLoaded,
+}: {
+  eventId: string;
+  guestUrl: string;
+  publicSlug: string;
+  qrDownloadHref: string;
+  tables: EventTableRow[];
+  onTablesLoaded: (tables: EventTableRow[]) => void;
+}) {
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/events/${eventId}/tables`, {
+          cache: "no-store",
+        });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as EventTableRow[];
+        if (!cancelled) onTablesLoaded(data);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId, onTablesLoaded]);
+
+  return (
+    <EventQrCard
+      url={guestUrl}
+      downloadHref={qrDownloadHref}
+      eventId={eventId}
+      publicSlug={publicSlug}
+      tables={tables}
+    />
   );
 }

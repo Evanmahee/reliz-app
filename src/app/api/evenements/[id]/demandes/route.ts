@@ -1,6 +1,5 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { getSessionUserId } from "@/lib/auth";
 import { assertEventAccess, getSessionUser } from "@/lib/event-access";
 import { prisma } from "@/lib/prisma";
 
@@ -9,8 +8,7 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  const userId = token ? await verifySessionToken(token) : null;
+  const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
@@ -25,6 +23,9 @@ export async function GET(
   }
   const requests = await prisma.guestRequest.findMany({
     where: { eventId: id },
+    include: {
+      claimedBy: { select: { id: true, name: true, email: true } },
+    },
     orderBy: { createdAt: "desc" },
     take: 120,
   });

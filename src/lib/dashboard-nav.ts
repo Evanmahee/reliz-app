@@ -8,7 +8,7 @@ export type DashboardNavItem = {
   icon: string;
   /** Visible uniquement pour le traiteur (OWNER) */
   ownerOnly?: boolean;
-  /** Visible uniquement pour le staff */
+  /** Visible pour STAFF et MAITRE_HOTEL */
   staffOnly?: boolean;
 };
 
@@ -53,19 +53,14 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     icon: "history",
     ownerOnly: true,
   },
-  {
-    href: "/dashboard/parametres",
-    labelKey: "nav.settings",
-    shortLabelKey: "nav.shortSettings",
-    icon: "settings",
-  },
 ];
 
 export function navItemsForRole(role: string) {
-  const isStaff = role === "STAFF";
+  const isOwner = role === "OWNER";
+  const isStaffLike = role === "STAFF" || role === "MAITRE_HOTEL";
   return DASHBOARD_NAV_ITEMS.filter((item) => {
-    if (item.ownerOnly && isStaff) return false;
-    if (item.staffOnly && !isStaff) return false;
+    if (item.ownerOnly && !isOwner) return false;
+    if (item.staffOnly && !isStaffLike) return false;
     return true;
   });
 }

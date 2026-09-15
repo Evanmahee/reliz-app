@@ -8,10 +8,10 @@ datasource db {
 }
 
 model User {
-  id           String      @id @default(cuid())
+  id           String      @id
   email        String      @unique
   name         String?
-  passwordHash String
+  /// OWNER | MAITRE_HOTEL | STAFF
   role         String      @default("OWNER")
   employerId   String?
   employer     User?       @relation("StaffEmployer", fields: [employerId], references: [id], onDelete: Cascade)
@@ -24,6 +24,7 @@ model User {
   staffEventAccess StaffEventAccess[]
   staffTasksCreated StaffTask[] @relation("StaffTaskCreator")
   staffTasksAssigned StaffTask[] @relation("StaffTaskAssignee")
+  claimedRequests GuestRequest[] @relation("GuestRequestClaimedBy")
 
   @@index([employerId])
   @@index([role])
@@ -42,26 +43,29 @@ model Checklist {
 }
 
 model Event {
-  id                  String         @id @default(cuid())
-  publicSlug          String         @unique
-  name                String
-  venue               String         @default("")
-  startsAt            DateTime?
-  endsAt              DateTime?
-  instructions        String         @default("")
-  instructionsBlocks  Json?
-  menuHidden          Boolean        @default(false)
-  status              String         @default("LIVE")
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-  ownerId             String
-  owner               User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  menuItems           MenuItem[]
-  requests            GuestRequest[]
-  accessories         EventAccessory[]
-  staffAccess         StaffEventAccess[]
-  staffTasks          StaffTask[]
-  shoppingLists       ShoppingList[]
+  id                    String         @id @default(cuid())
+  publicSlug            String         @unique
+  name                  String
+  venue                 String         @default("")
+  startsAt              DateTime?
+  endsAt                DateTime?
+  instructions          String         @default("")
+  instructionsBlocks    Json?
+  menuHidden            Boolean        @default(false)
+  status                String         @default("LIVE")
+  escaladeDelayMinutes  Int            @default(5)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  ownerId               String
+  owner                 User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  menuItems             MenuItem[]
+  requests              GuestRequest[]
+  accessories           EventAccessory[]
+  staffAccess           StaffEventAccess[]
+  staffTasks            StaffTask[]
+  shoppingLists         ShoppingList[]
+  tables                Table[]
+  guestAllergies        GuestAllergy[]
 
   @@index([ownerId])
   @@index([status])
@@ -142,16 +146,47 @@ model MenuItem {
 }
 
 model GuestRequest {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   eventId       String
-  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   tableNumber   String
-  tableLocation String   @default("")
+  tableLocation String    @default("")
   type          String
+  /// DRINK | CLEAR | ASSISTANCE | URGENT | MISC | OTHER
+  category      String    @default("OTHER")
   message       String
-  status        String   @default("PENDING")
-  createdAt     DateTime @default(now())
+  status        String    @default("PENDING")
+  isVip         Boolean   @default(false)
+  claimedById   String?
+  claimedBy     User?     @relation("GuestRequestClaimedBy", fields: [claimedById], references: [id], onDelete: SetNull)
+  claimedAt     DateTime?
+  createdAt     DateTime  @default(now())
 
   @@index([eventId])
   @@index([status])
+  @@index([claimedById])
+  @@index([category])
+}
+
+model Table {
+  id        String  @id @default(cuid())
+  eventId   String
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  number    String
+  zone      String  @default("")
+  isVip     Boolean @default(false)
+
+  @@unique([eventId, number])
+  @@index([eventId])
+}
+
+model GuestAllergy {
+  id          String @id @default(cuid())
+  eventId     String
+  event       Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tableNumber String
+  content     String
+
+  @@index([eventId])
+  @@index([eventId, tableNumber])
 }

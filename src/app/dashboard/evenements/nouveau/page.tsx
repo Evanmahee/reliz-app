@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { CreateEventForm } from "@/components/dashboard/create-event-form";
 import { outlineButtonClassName } from "@/components/ui/button";
 import { getSessionUserId } from "@/lib/auth";
+import { getSessionUser, isOwner } from "@/lib/event-access";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/i18n/server";
 
@@ -15,6 +16,8 @@ export default async function NouvelEvenementPage({
   const sp = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
+  const user = await getSessionUser(userId);
+  if (!user || !isOwner(user)) redirect("/dashboard/evenements");
 
   const checklists = await prisma.checklist.findMany({
     where: { ownerId: userId },

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button, outlineButtonClassName } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getSessionUserId } from "@/lib/auth";
+import { getSessionUser, isOwner } from "@/lib/event-access";
 import { prisma } from "@/lib/prisma";
 import { dateLocaleTag } from "@/i18n/date-locale";
 import { getT } from "@/i18n/server";
@@ -12,6 +13,8 @@ export default async function ChecklistsPage() {
   const dateTag = dateLocaleTag(locale);
   const userId = await getSessionUserId();
   if (!userId) redirect("/connexion");
+  const user = await getSessionUser(userId);
+  if (!user || !isOwner(user)) redirect("/dashboard");
 
   const checklists = await prisma.checklist.findMany({
     where: { ownerId: userId },

@@ -54,7 +54,7 @@ export function CreateEventForm({
           <label className="mb-1.5 block text-xs font-medium text-zinc-500">
             {t("events.venueLabel")}
           </label>
-          <Input name="venue" placeholder="Domaine des Acacias" />
+          <Input name="venue" placeholder={t("events.venuePlaceholder")} />
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-medium text-zinc-500">

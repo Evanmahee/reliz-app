@@ -7,8 +7,9 @@ import {
   PrismaClientUnknownRequestError,
 } from "@prisma/client/runtime/library";
 import { getSessionUserId } from "@/lib/auth";
-import { GUEST_REQUEST, USER_ROLE } from "@/lib/constants";
+import { GUEST_REQUEST, GUEST_REQUEST_STATUS, USER_ROLE } from "@/lib/constants";
 import { getOwnerId, getSessionUser, listAccessibleLiveEventIds } from "@/lib/event-access";
+import { isNextRedirectError } from "@/lib/is-next-redirect-error";
 import {
   assigneeDisplayName,
   extractCheckboxTasks,
@@ -27,7 +28,10 @@ import { getT } from "@/i18n/server";
 export const dynamic = "force-dynamic";
 
 type RecentGuestRequest = Prisma.GuestRequestGetPayload<{
-  include: { event: { select: { id: true; name: true; venue: true } } };
+  include: {
+    event: { select: { id: true; name: true; venue: true } };
+    claimedBy: { select: { id: true; name: true; email: true } };
+  };
 }>;
 
 export default async function DashboardHomePage() {
@@ -46,6 +50,7 @@ export default async function DashboardHomePage() {
   const sessionUser = await getSessionUser(userId);
   if (!sessionUser) redirect("/connexion");
   const isStaff = sessionUser.role === USER_ROLE.STAFF;
+  const owner = sessionUser.role === USER_ROLE.OWNER;
 
   let events: Event[];
   let eventIds: string[] = [];
@@ -58,6 +63,7 @@ export default async function DashboardHomePage() {
         })
       : [];
   } catch (e) {
+    if (isNextRedirectError(e)) throw e;
     console.error("[dashboard]", e);
     if (
       e instanceof PrismaClientInitializationError ||
@@ -72,6 +78,7 @@ export default async function DashboardHomePage() {
   const count = events.length;
 
   let recentRequests: RecentGuestRequest[];
+  let allergiesByKey: Record<string, string> = {};
   try {
     recentRequests =
       count > 0
@@ -79,12 +86,30 @@ export default async function DashboardHomePage() {
             where: { eventId: { in: eventIds } },
             include: {
               event: { select: { id: true, name: true, venue: true } },
+              claimedBy: { select: { id: true, name: true, email: true } },
             },
             orderBy: { createdAt: "desc" },
             take: 60,
           })
         : [];
+    if (count > 0) {
+      const allergyRows = await prisma.guestAllergy.findMany({
+        where: { eventId: { in: eventIds } },
+        select: { eventId: true, tableNumber: true, content: true },
+      });
+      const buckets: Record<string, string[]> = {};
+      for (const a of allergyRows) {
+        const key = `${a.eventId}:${a.tableNumber}`;
+        (buckets[key] ??= []).push(a.content);
+      }
+      for (const [key, contents] of Object.entries(buckets)) {
+        allergiesByKey[key] = Array.from(
+          new Set(contents.map((c) => c.trim()).filter(Boolean)),
+        ).join("\n");
+      }
+    }
   } catch (e) {
+    if (isNextRedirectError(e)) throw e;
     console.error("[dashboard guestRequest]", e);
     if (
       e instanceof PrismaClientInitializationError ||
@@ -97,9 +122,22 @@ export default async function DashboardHomePage() {
   }
 
   recentRequests.sort((a, b) => {
-    const pa = a.status === "PENDING" ? 0 : 1;
-    const pb = b.status === "PENDING" ? 0 : 1;
+    const active = (s: string) =>
+      s === GUEST_REQUEST_STATUS.PENDING ||
+      s === GUEST_REQUEST_STATUS.IN_PROGRESS ||
+      s === GUEST_REQUEST_STATUS.ESCALATED
+        ? 0
+        : 1;
+    const pa = active(a.status);
+    const pb = active(b.status);
     if (pa !== pb) return pa - pb;
+    // Escaladées puis URGENT en premier parmi les actives
+    const ea = a.status === GUEST_REQUEST_STATUS.ESCALATED ? 0 : 1;
+    const eb = b.status === GUEST_REQUEST_STATUS.ESCALATED ? 0 : 1;
+    if (ea !== eb) return ea - eb;
+    const ca = a.category === "URGENT" ? 0 : 1;
+    const cb = b.category === "URGENT" ? 0 : 1;
+    if (ca !== cb) return ca - cb;
     const ua = getRequestUrgency(a.createdAt);
     const ub = getRequestUrgency(b.createdAt);
     const urgencyOrder = { urgent: 0, waiting: 1, fresh: 2 };
@@ -107,7 +145,12 @@ export default async function DashboardHomePage() {
     return b.createdAt.getTime() - a.createdAt.getTime();
   });
 
-  const pending = recentRequests.filter((r) => r.status === "PENDING");
+  const pending = recentRequests.filter(
+    (r) =>
+      r.status === GUEST_REQUEST_STATUS.PENDING ||
+      r.status === GUEST_REQUEST_STATUS.IN_PROGRESS ||
+      r.status === GUEST_REQUEST_STATUS.ESCALATED,
+  );
   const pendingNotif = pending.length;
   const urgentCount = pending.filter(
     (r) => getRequestUrgency(r.createdAt) === "urgent",
@@ -151,7 +194,7 @@ export default async function DashboardHomePage() {
             {isStaff ? t("dashboard.subtitleStaff") : t("dashboard.subtitle")}
           </p>
         </div>
-        {!isStaff ? (
+        {owner ? (
           <Link
             href="/dashboard/evenements/nouveau"
             className={`${primaryButtonClassName} shrink-0`}
@@ -206,7 +249,17 @@ export default async function DashboardHomePage() {
               </p>
             ) : (
               <ul className="divide-y divide-zinc-100">
-                {recentRequests.slice(0, 25).map((r) => (
+                {recentRequests.slice(0, 25).map((r) => {
+                  const claimedName =
+                    r.claimedBy?.name?.trim() || r.claimedBy?.email || null;
+                  const isEscalated =
+                    r.status === GUEST_REQUEST_STATUS.ESCALATED;
+                  const claimedByOther = Boolean(
+                    r.claimedById &&
+                      r.claimedById !== userId &&
+                      !isEscalated,
+                  );
+                  return (
                   <DashboardRequestCard
                     key={r.id}
                     href={`/dashboard/evenements/${r.event.id}`}
@@ -215,18 +268,31 @@ export default async function DashboardHomePage() {
                     venue={r.event.venue}
                     tableNumber={r.tableNumber}
                     tableLocation={r.tableLocation}
+                    allergyContent={
+                      allergiesByKey[`${r.event.id}:${r.tableNumber}`] ?? ""
+                    }
                     type={r.type}
                     typeLabel={typeLabel(r.type)}
+                    category={r.category}
+                    categoryLabel={t(
+                      `guest.categories.${(r.category || "OTHER").toLowerCase()}`,
+                    )}
                     message={r.message}
                     status={r.status}
+                    claimedByName={claimedName}
+                    claimedByOther={claimedByOther}
                     urgencyLabels={urgencyLabels}
                     pendingLabel={t("dashboard.newBadge")}
                     doneLabel={t("dashboard.doneBadge")}
+                    claimedByLabel={t("events.requests.claimedBy")}
+                    lockedLabel={t("events.requests.locked")}
+                    escalatedLabel={t("events.requests.escalated")}
                     tablePrefix={t("dashboard.table")}
                     venuePrefix={t("dashboard.atVenue")}
                     minLabel={t("dashboard.minutes")}
                   />
-                ))}
+                  );
+                })}
               </ul>
             )}
           </Card>
@@ -268,7 +334,7 @@ export default async function DashboardHomePage() {
           <p className="mt-2 text-sm text-zinc-500">
             {isStaff ? t("dashboard.noEventsStaff") : t("dashboard.noEventsHint")}
           </p>
-          {!isStaff ? (
+          {owner ? (
             <Link
               href="/dashboard/evenements/nouveau"
               className={`${primaryButtonClassName} mx-auto mt-6 inline-flex`}
@@ -288,6 +354,7 @@ export default async function DashboardHomePage() {
                   name={e.name}
                   venue={e.venue}
                   startsAtIso={e.startsAt?.toISOString() ?? null}
+                  canArchive={owner}
                 />
               </li>
             ))}

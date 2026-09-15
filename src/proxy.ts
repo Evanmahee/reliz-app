@@ -1,22 +1,21 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
-const SESSION_COOKIE = "reliz_session";
+import { updateSupabaseSession } from "@/lib/supabase/proxy-session";
 
 /**
- * Garde légère : cookie présent + AUTH_SECRET configuré.
- * La vérif JWT réelle est faite dans les Server Components / routes API — évite les
- * réponses redirect depuis le proxy sur les navigations RSC (retour arrière, prefetch).
+ * Garde légère dashboard / API : session Supabase présente.
+ * getUser() dans le proxy rafraîchit aussi les cookies.
  */
 export async function proxy(req: NextRequest) {
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
-  if (!process.env.AUTH_SECRET?.trim()) {
-    return NextResponse.next();
+  const { response, userId } = await updateSupabaseSession(req);
+  if (!userId) {
+    const redirect = NextResponse.redirect(new URL("/connexion", req.url));
+    for (const c of response.cookies.getAll()) {
+      redirect.cookies.set(c);
+    }
+    return redirect;
   }
-  if (!token?.trim()) {
-    return NextResponse.redirect(new URL("/connexion", req.url));
-  }
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
@@ -24,5 +23,8 @@ export const config = {
     "/dashboard",
     "/dashboard/:path*",
     "/api/evenements/:path*",
+    "/api/events/:path*",
+    "/api/requests/:id/claim",
+    "/api/requests/:id/unclaim",
   ],
 };

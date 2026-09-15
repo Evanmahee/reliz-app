@@ -7,12 +7,14 @@ import {
 } from "@prisma/client/runtime/library";
 import { logoutAction } from "@/app/actions/auth";
 import { getSessionUserId } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getSessionUser } from "@/lib/event-access";
+import { isNextRedirectError } from "@/lib/is-next-redirect-error";
 import { RelizLogo } from "@/components/brand/reliz-logo";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardTabBar } from "@/components/dashboard/dashboard-tab-bar";
-import { Button } from "@/components/ui/button";
+import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
 import { getT } from "@/i18n/server";
+import { MdLogout } from "react-icons/md";
 
 export const dynamic = "force-dynamic";
 
@@ -27,13 +29,11 @@ export default async function DashboardLayout({
   const { t } = await getT();
   let user: { email: string; name: string | null; role: string };
   try {
-    const row = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true, name: true, role: true },
-    });
+    const row = await getSessionUser(userId);
     if (!row) redirect("/connexion");
     user = row;
   } catch (e) {
+    if (isNextRedirectError(e)) throw e;
     console.error("[dashboard layout]", e);
     if (
       e instanceof PrismaClientInitializationError ||
@@ -58,10 +58,16 @@ export default async function DashboardLayout({
             <RelizLogo height={22} />
           </Link>
           <div className="flex items-center gap-2">
+            <LocaleSwitcher returnTo="/dashboard" variant="select" />
             <form action={logoutAction}>
-              <Button type="submit" variant="ghost" className="text-xs">
-                {t("nav.logout")}
-              </Button>
+              <button
+                type="submit"
+                aria-label={t("nav.logout")}
+                title={t("nav.logout")}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[1.15rem] text-zinc-700 transition-colors hover:bg-zinc-100/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
+              >
+                <MdLogout size={22} aria-hidden />
+              </button>
             </form>
           </div>
         </header>

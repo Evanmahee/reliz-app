@@ -12,11 +12,13 @@ export function EventLiveCard({
   name,
   venue,
   startsAtIso,
+  canArchive = false,
 }: {
   id: string;
   name: string;
   venue: string;
   startsAtIso: string | null;
+  canArchive?: boolean;
 }) {
   const { t, locale } = useT();
   const dateLabel =
@@ -44,26 +46,28 @@ export function EventLiveCard({
         ) : null}
         <p className="mt-3 text-xs text-zinc-400">{dateLabel}</p>
       </Link>
-      <div className="border-t border-zinc-100 bg-zinc-50/50 px-4 py-3">
-        <form
-          action={archiveEventFormAction}
-          onSubmit={(e) => {
-            if (!confirm(t("events.endConfirm"))) {
-              e.preventDefault();
-            }
-          }}
-          className="flex justify-end"
-        >
-          <input type="hidden" name="eventId" value={id} />
-          <SubmitButton
-            variant="outline"
-            className="text-xs font-medium text-zinc-700"
-            pendingLabel={t("events.archiving")}
+      {canArchive ? (
+        <div className="border-t border-zinc-100 bg-zinc-50/50 px-4 py-3">
+          <form
+            action={archiveEventFormAction}
+            onSubmit={(e) => {
+              if (!confirm(t("events.endConfirm"))) {
+                e.preventDefault();
+              }
+            }}
+            className="flex justify-end"
           >
-            {t("events.endEvent")}
-          </SubmitButton>
-        </form>
-      </div>
+            <input type="hidden" name="eventId" value={id} />
+            <SubmitButton
+              variant="outline"
+              className="text-xs font-medium text-zinc-700"
+              pendingLabel={t("events.archiving")}
+            >
+              {t("events.endEvent")}
+            </SubmitButton>
+          </form>
+        </div>
+      ) : null}
     </Card>
   );
 }

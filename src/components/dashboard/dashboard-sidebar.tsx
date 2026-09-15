@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/app/actions/auth";
 import { RelizLogo } from "@/components/brand/reliz-logo";
+import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
 import { isDashboardNavActive, navItemsForRole } from "@/lib/dashboard-nav";
 import { useT } from "@/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,6 @@ export function DashboardSidebar({
             <Link
               key={l.href}
               href={l.href}
-              prefetch={false}
               className={`flex items-center gap-3 rounded-[1.15rem] px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-violet-100/70 text-zinc-900"
@@ -63,6 +63,7 @@ export function DashboardSidebar({
             {userName ?? t("user.defaultName")}
           </p>
           <p className="truncate text-xs text-zinc-500">{userEmail}</p>
+          <LocaleSwitcher returnTo={pathname} className="mt-3" />
         </div>
         <form action={logoutAction} className="mt-3">
           <Button type="submit" variant="ghost" className="w-full justify-start">

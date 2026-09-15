@@ -7,16 +7,31 @@ import { getT } from "@/i18n/server";
 
 export default async function GuestEventPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ table?: string; zone?: string }>;
 }) {
   const { t } = await getT();
   const { slug } = await params;
+  const sp = await searchParams;
+  const tableParam = String(sp.table ?? "").trim();
+  const zoneParam = String(sp.zone ?? "").trim();
+
   const event = await prisma.event.findUnique({
     where: { publicSlug: slug },
     include: { menuItems: { orderBy: { sortOrder: "asc" } } },
   });
   if (!event) notFound();
+
+  let isVip = false;
+  if (tableParam) {
+    const table = await prisma.table.findFirst({
+      where: { eventId: event.id, number: tableParam },
+      select: { isVip: true, zone: true },
+    });
+    isVip = table?.isVip ?? false;
+  }
 
   if (event.status !== EVENT_STATUS.LIVE) {
     return (
@@ -40,6 +55,9 @@ export default async function GuestEventPage({
           publicSlug={event.publicSlug}
           eventName={event.name}
           menuHidden={event.menuHidden}
+          initialTableNumber={tableParam || undefined}
+          initialTableLocation={zoneParam || undefined}
+          isVip={isVip}
           menuItems={event.menuItems.map((m) => ({
             id: m.id,
             name: m.name,

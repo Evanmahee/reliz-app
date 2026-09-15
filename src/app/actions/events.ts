@@ -11,6 +11,7 @@ import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS } from "@/lib/constants";
 import {
   assertEventAccess,
+  canManageEventOps,
   isOwner,
   requireSessionUser,
 } from "@/lib/event-access";
@@ -44,6 +45,13 @@ async function assertEventOwnedByTraiteur(eventId: string) {
   });
   if (!ev) throw new Error("Événement introuvable");
   return ev;
+}
+
+/** Accès opérationnel OWNER ou MAITRE_HOTEL. */
+async function assertEventOps(eventId: string) {
+  const user = await requireSessionUser();
+  if (!canManageEventOps(user)) throw new Error("Accès refusé");
+  return assertEventAccess(eventId, user);
 }
 
 function randomSlug() {
@@ -159,10 +167,9 @@ export async function updateEventInformationsAction(formData: FormData) {
 }
 
 export async function updateEventConsignesAction(formData: FormData) {
-  const userId = await requireOwnerId();
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return;
-  const ev = await assertEventOwnedByTraiteur(eventId);
+  const ev = await assertEventOps(eventId);
   const rawPayload = String(formData.get("instructionsPayload") ?? "").trim();
   let normalized = rawPayload
     ? validateAndNormalizeBlocksFromJson(rawPayload, ev.instructions)
@@ -249,10 +256,9 @@ export async function archiveEventFormAction(formData: FormData) {
 }
 
 export async function addMenuItemAction(formData: FormData) {
-  const userId = await requireOwnerId();
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return;
-  await assertEventOwnedByTraiteur(eventId);
+  await assertEventOps(eventId);
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   if (!name) return;
@@ -272,11 +278,10 @@ export async function addMenuItemAction(formData: FormData) {
 }
 
 export async function deleteMenuItemFormAction(formData: FormData) {
-  const userId = await requireOwnerId();
   const menuItemId = String(formData.get("menuItemId") ?? "");
   const eventId = String(formData.get("eventId") ?? "");
   if (!menuItemId || !eventId) return;
-  await assertEventOwnedByTraiteur(eventId);
+  await assertEventOps(eventId);
   await prisma.menuItem.deleteMany({
     where: { id: menuItemId, eventId },
   });
@@ -284,22 +289,17 @@ export async function deleteMenuItemFormAction(formData: FormData) {
 }
 
 export async function toggleMenuStockAction(formData: FormData) {
-  const userId = await requireOwnerId();
   const menuItemId = String(formData.get("menuItemId") ?? "");
   const eventId = String(formData.get("eventId") ?? "");
   const next = String(formData.get("outOfStock") ?? "") === "true";
   if (!menuItemId || !eventId) return;
-  await assertEventOwnedByTraiteur(eventId);
+  const ev = await assertEventOps(eventId);
   await prisma.menuItem.updateMany({
     where: { id: menuItemId, eventId },
     data: { outOfStock: next },
   });
-  const ev = await prisma.event.findFirst({
-    where: { id: eventId, ownerId: userId },
-    select: { publicSlug: true },
-  });
   revalidatePath(`/dashboard/evenements/${eventId}`);
-  if (ev) revalidatePath(`/e/${ev.publicSlug}`);
+  revalidatePath(`/e/${ev.publicSlug}`);
 }
 
 export async function markRequestDoneAction(requestId: string, eventId: string) {
@@ -323,7 +323,7 @@ export async function toggleEventMenuHiddenAction(formData: FormData) {
   const eventId = String(formData.get("eventId") ?? "");
   const hidden = String(formData.get("menuHidden") ?? "") === "true";
   if (!eventId) return;
-  const ev = await assertEventOwnedByTraiteur(eventId);
+  const ev = await assertEventOps(eventId);
   await prisma.event.update({
     where: { id: eventId },
     data: { menuHidden: hidden },
@@ -333,22 +333,17 @@ export async function toggleEventMenuHiddenAction(formData: FormData) {
 }
 
 export async function toggleMenuItemHiddenAction(formData: FormData) {
-  const userId = await requireOwnerId();
   const menuItemId = String(formData.get("menuItemId") ?? "");
   const eventId = String(formData.get("eventId") ?? "");
   const hidden = String(formData.get("hidden") ?? "") === "true";
   if (!menuItemId || !eventId) return;
-  await assertEventOwnedByTraiteur(eventId);
+  const ev = await assertEventOps(eventId);
   await prisma.menuItem.updateMany({
     where: { id: menuItemId, eventId },
     data: { hidden },
   });
-  const ev = await prisma.event.findFirst({
-    where: { id: eventId, ownerId: userId },
-    select: { publicSlug: true },
-  });
   revalidatePath(`/dashboard/evenements/${eventId}`);
-  if (ev) revalidatePath(`/e/${ev.publicSlug}`);
+  revalidatePath(`/e/${ev.publicSlug}`);
 }
 
 export async function addEventAccessoryAction(formData: FormData) {
@@ -358,7 +353,7 @@ export async function addEventAccessoryAction(formData: FormData) {
   const qtyRaw = parseInt(String(formData.get("quantity") ?? "1"), 10);
   const quantity = Number.isFinite(qtyRaw) && qtyRaw > 0 ? qtyRaw : 1;
   if (!eventId || !name) return;
-  await assertEventOwnedByTraiteur(eventId);
+  await assertEventOps(eventId);
   const maxSort = await prisma.eventAccessory.aggregate({
     where: { eventId },
     _max: { sortOrder: true },
@@ -379,7 +374,7 @@ export async function deleteEventAccessoryAction(formData: FormData) {
   const eventId = String(formData.get("eventId") ?? "");
   const accessoryId = String(formData.get("accessoryId") ?? "");
   if (!eventId || !accessoryId) return;
-  await assertEventOwnedByTraiteur(eventId);
+  await assertEventOps(eventId);
   await prisma.eventAccessory.deleteMany({
     where: { id: accessoryId, eventId },
   });

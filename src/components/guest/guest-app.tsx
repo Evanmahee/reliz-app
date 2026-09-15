@@ -1,8 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { submitGuestRequest } from "@/app/actions/guest";
-import { GUEST_REQUEST } from "@/lib/constants";
+import { GUEST_REQUEST, REQUEST_CATEGORY } from "@/lib/constants";
+import { postGuestRequestWithRetry } from "@/lib/guest-request-submit";
+import {
+  REQUEST_CATEGORY_ORDER,
+  REQUEST_CATEGORY_STYLES,
+  type RequestCategory,
+} from "@/lib/request-category";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,11 +28,17 @@ export function GuestApp({
   eventName,
   menuHidden,
   menuItems,
+  initialTableNumber,
+  initialTableLocation,
+  isVip = false,
 }: {
   publicSlug: string;
   eventName: string;
   menuHidden: boolean;
   menuItems: MenuItem[];
+  initialTableNumber?: string;
+  initialTableLocation?: string;
+  isVip?: boolean;
 }) {
   const { t, messages } = useT();
   const serviceIdeas = messages.guest
@@ -43,16 +54,34 @@ export function GuestApp({
   const [pending, start] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   const [productNote, setProductNote] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
   const [serviceText, setServiceText] = useState("");
+  const [serviceCategory, setServiceCategory] = useState<RequestCategory>(
+    REQUEST_CATEGORY.MISC,
+  );
+  const [allergiesDraft, setAllergiesDraft] = useState("");
 
   useEffect(() => {
-    setTableNumber(sessionStorage.getItem(storageKey));
-    setLocationDraft(sessionStorage.getItem(locationKey) ?? "");
+    const fromUrl = initialTableNumber?.trim();
+    const locFromUrl = initialTableLocation?.trim();
+    if (fromUrl) {
+      sessionStorage.setItem(storageKey, fromUrl);
+      if (locFromUrl) {
+        sessionStorage.setItem(locationKey, locFromUrl);
+      }
+      setTableNumber(fromUrl);
+      setLocationDraft(
+        locFromUrl || sessionStorage.getItem(locationKey) || "",
+      );
+    } else {
+      setTableNumber(sessionStorage.getItem(storageKey));
+      setLocationDraft(sessionStorage.getItem(locationKey) ?? "");
+    }
     setHydrated(true);
-  }, [storageKey, locationKey]);
+  }, [storageKey, locationKey, initialTableNumber, initialTableLocation]);
 
   function saveTable(e: React.FormEvent) {
     e.preventDefault();
@@ -81,34 +110,61 @@ export function GuestApp({
     setTimeout(() => setFeedback(null), 2400);
   }
 
+  function categoryLabel(cat: RequestCategory) {
+    return t(`guest.categories.${cat.toLowerCase()}`);
+  }
+
   const send = useCallback(
-    (type: string, message: string) => {
+    (type: string, message: string, category: RequestCategory) => {
       if (!tableNumber) return;
       setError(null);
+      setRetrying(false);
       start(async () => {
         const loc =
           (typeof sessionStorage !== "undefined"
             ? sessionStorage.getItem(locationKey)
             : null) ??
           locationDraft.trim();
-        const res = await submitGuestRequest({
-          publicSlug,
-          tableNumber,
-          tableLocation: loc || undefined,
-          type,
-          message,
-        });
+        const allergies = allergiesDraft.trim();
+        const res = await postGuestRequestWithRetry(
+          {
+            publicSlug,
+            tableNumber,
+            tableLocation: loc || undefined,
+            type,
+            category,
+            message,
+            allergies: allergies || undefined,
+          },
+          () => setRetrying(true),
+        );
+        setRetrying(false);
         if (!res.ok) {
-          setError(res.error);
+          if (res.error === "network") {
+            setError(t("guest.errors.sendFailed"));
+          } else if (res.detail) {
+            setError(res.detail);
+          } else {
+            setError(t("guest.errors.sendFailed"));
+          }
           return;
         }
         flash(t("guest.requestSent"));
         setProductNote("");
         setSelectedProduct(null);
         setServiceText("");
+        setServiceCategory(REQUEST_CATEGORY.MISC);
+        if (allergies) setAllergiesDraft("");
       });
     },
-    [publicSlug, tableNumber, locationDraft, locationKey, t],
+    [
+      publicSlug,
+      tableNumber,
+      locationDraft,
+      locationKey,
+      allergiesDraft,
+      t,
+    ],
   );
 
   if (!hydrated) {
@@ -183,6 +239,16 @@ export function GuestApp({
           <span className="rounded-full bg-violet-100/80 px-3 py-1 text-xs font-medium text-zinc-800">
             {t("guest.tableBadge")} {tableNumber}
           </span>
+          {locationDraft ? (
+            <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
+              {locationDraft}
+            </span>
+          ) : null}
+          {isVip ? (
+            <span className="rounded-full bg-gradient-to-r from-amber-200 to-yellow-300 px-3 py-1 text-xs font-bold tracking-wide text-amber-950 shadow-sm ring-1 ring-amber-400/40">
+              VIP
+            </span>
+          ) : null}
           <Button
             type="button"
             variant="ghost"
@@ -195,8 +261,29 @@ export function GuestApp({
         {feedback ? (
           <p className="mt-3 text-sm font-medium text-emerald-700">{feedback}</p>
         ) : null}
+        {retrying ? (
+          <p className="mt-3 text-sm font-medium text-amber-800">
+            {t("guest.retrying")}
+          </p>
+        ) : null}
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
       </header>
+
+      <div className="rounded-[1.75rem] border border-zinc-200 bg-white px-5 py-4">
+        <label className="block text-xs font-medium text-zinc-500">
+          {t("guest.allergiesLabel")}
+        </label>
+        <Input
+          className="mt-1.5"
+          value={allergiesDraft}
+          onChange={(e) => setAllergiesDraft(e.target.value)}
+          placeholder={t("guest.allergiesPh")}
+          autoComplete="off"
+        />
+        <p className="mt-1.5 text-[11px] text-zinc-400">
+          {t("guest.allergiesHint")}
+        </p>
+      </div>
 
       <div className="flex gap-1 rounded-[1.35rem] border border-zinc-200 bg-zinc-50/80 p-1">
         {tabs.map(({ id, label }) => (
@@ -295,26 +382,11 @@ export function GuestApp({
                       const msg = productNote.trim()
                         ? `${base} — ${productNote.trim()}`
                         : base;
-                      setError(null);
-                      start(async () => {
-                        const loc =
-                          sessionStorage.getItem(locationKey) ??
-                          locationDraft.trim();
-                        const res = await submitGuestRequest({
-                          publicSlug,
-                          tableNumber,
-                          tableLocation: loc || undefined,
-                          type: GUEST_REQUEST.PRODUCT,
-                          message: msg,
-                        });
-                        if (!res.ok) {
-                          setError(res.error);
-                          return;
-                        }
-                        flash(t("guest.requestSent"));
-                        setProductNote("");
-                        setSelectedProduct(null);
-                      });
+                      send(
+                        GUEST_REQUEST.PRODUCT,
+                        msg,
+                        REQUEST_CATEGORY.OTHER,
+                      );
                     }}
                   >
                     {t("guest.send")}
@@ -331,6 +403,31 @@ export function GuestApp({
           <h2 className="text-sm font-semibold text-zinc-900">
             {t("guest.serviceTitle")}
           </h2>
+
+          <div>
+            <p className="mb-2 text-xs font-medium text-zinc-500">
+              {t("guest.categoryLabel")}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {REQUEST_CATEGORY_ORDER.map((cat) => {
+                const styles = REQUEST_CATEGORY_STYLES[cat];
+                const active = serviceCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setServiceCategory(cat)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      active ? styles.chipActive : styles.chip
+                    }`}
+                  >
+                    {categoryLabel(cat)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <p className="text-xs text-zinc-500">{t("guest.serviceSuggestions")}</p>
           <div className="flex flex-wrap gap-2">
             {serviceIdeas.map((s) => (
@@ -355,7 +452,13 @@ export function GuestApp({
             type="button"
             className="w-full"
             disabled={pending || !serviceText.trim()}
-            onClick={() => send(GUEST_REQUEST.SERVICE, serviceText.trim())}
+            onClick={() =>
+              send(
+                GUEST_REQUEST.SERVICE,
+                serviceText.trim(),
+                serviceCategory,
+              )
+            }
           >
             {t("guest.sendRequest")}
           </Button>
@@ -376,6 +479,7 @@ export function GuestApp({
               send(
                 GUEST_REQUEST.STAFF,
                 t("guest.staffMessage").replace("{table}", tableNumber),
+                REQUEST_CATEGORY.ASSISTANCE,
               )
             }
           >

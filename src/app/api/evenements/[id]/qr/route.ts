@@ -1,6 +1,10 @@
-import { cookies } from "next/headers";
 import QRCode from "qrcode";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { getSessionUserId } from "@/lib/auth";
+import {
+  assertEventAccess,
+  canManageEventOps,
+  getSessionUser,
+} from "@/lib/event-access";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -8,13 +12,21 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  const userId = token ? await verifySessionToken(token) : null;
+  const userId = await getSessionUserId();
   if (!userId) {
     return new Response("Non authentifié", { status: 401 });
   }
+  const user = await getSessionUser(userId);
+  if (!user || !canManageEventOps(user)) {
+    return new Response("Non authentifié", { status: 401 });
+  }
+  try {
+    await assertEventAccess(id, user);
+  } catch {
+    return new Response("Introuvable", { status: 404 });
+  }
   const event = await prisma.event.findFirst({
-    where: { id, ownerId: userId },
+    where: { id },
     select: { publicSlug: true },
   });
   if (!event) {
