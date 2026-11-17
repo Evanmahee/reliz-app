@@ -1,5 +1,7 @@
 "use server";
 
+import { field } from "@/lib/form-field";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -10,9 +12,19 @@ import {
 import { getOwnerId, isOwner, requireSessionUser } from "@/lib/event-access";
 import { prisma } from "@/lib/prisma";
 
+/** 300 articles max, libellés bornés : aucune liste démesurée en base. */
 function parseItemsJson(raw: string): ShoppingListItem[] {
+  if (raw.length > 200_000) return [];
   try {
-    return parseShoppingItems(JSON.parse(raw));
+    return parseShoppingItems(JSON.parse(raw))
+      .slice(0, 300)
+      .map((item) => {
+        const out = { ...item } as Record<string, unknown>;
+        for (const [k, v] of Object.entries(out)) {
+          if (typeof v === "string") out[k] = v.slice(0, 300);
+        }
+        return out as unknown as ShoppingListItem;
+      });
   } catch {
     return [];
   }
@@ -31,7 +43,7 @@ function revalidateShopping(eventId: string | null | undefined, listId?: string)
 export async function createEventShoppingListAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) return;
-  const eventId = String(formData.get("eventId") ?? "").trim();
+  const eventId = field(formData, "eventId");
   if (!eventId) return;
 
   const ev = await prisma.event.findFirst({
@@ -63,8 +75,8 @@ export async function createEventShoppingListAction(formData: FormData) {
 export async function createShoppingListAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) return;
-  const name = String(formData.get("name") ?? "").trim();
-  const eventId = String(formData.get("eventId") ?? "").trim() || null;
+  const name = field(formData, "name");
+  const eventId = field(formData, "eventId") || null;
   const itemsRaw = String(formData.get("items") ?? "[]");
   if (!name) redirect("/dashboard/evenements");
   if (eventId) {
@@ -91,8 +103,8 @@ export async function createShoppingListAction(formData: FormData) {
 export async function updateShoppingListAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) return;
-  const listId = String(formData.get("listId") ?? "").trim();
-  const name = String(formData.get("name") ?? "").trim();
+  const listId = field(formData, "listId");
+  const name = field(formData, "name");
   const itemsRaw = String(formData.get("items") ?? "[]");
   if (!listId || !name) return;
 
@@ -115,8 +127,8 @@ export async function updateShoppingListAction(formData: FormData) {
 export async function markShoppingListSentAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) return;
-  const listId = String(formData.get("listId") ?? "").trim();
-  const sentTo = String(formData.get("sentTo") ?? "").trim();
+  const listId = field(formData, "listId");
+  const sentTo = field(formData, "sentTo");
   if (!listId) return;
 
   const list = await prisma.shoppingList.findFirst({
@@ -135,7 +147,7 @@ export async function markShoppingListSentAction(formData: FormData) {
 export async function deleteShoppingListAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) return;
-  const listId = String(formData.get("listId") ?? "").trim();
+  const listId = field(formData, "listId");
   if (!listId) return;
 
   const list = await prisma.shoppingList.findFirst({

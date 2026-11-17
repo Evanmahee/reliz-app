@@ -1,5 +1,7 @@
 "use server";
 
+import { field } from "@/lib/form-field";
+
 import { nanoid } from "nanoid";
 import { Prisma } from "@prisma/client";
 import {
@@ -60,10 +62,10 @@ function randomSlug() {
 
 export async function createEventAction(formData: FormData) {
   const userId = await requireOwnerId();
-  const name = String(formData.get("name") ?? "").trim();
-  const venue = String(formData.get("venue") ?? "").trim();
-  const checklistId = String(formData.get("checklistId") ?? "").trim();
-  const startsRaw = String(formData.get("startsAt") ?? "").trim();
+  const name = field(formData, "name");
+  const venue = field(formData, "venue");
+  const checklistId = field(formData, "checklistId");
+  const startsRaw = field(formData, "startsAt");
   if (!name) {
     redirect("/dashboard/evenements/nouveau?erreur=nom");
   }
@@ -90,7 +92,7 @@ export async function createEventAction(formData: FormData) {
     publicSlug = randomSlug();
   }
   const startsAt = startsRaw ? new Date(startsRaw) : null;
-  const clientEventId = String(formData.get("clientEventId") ?? "").trim();
+  const clientEventId = field(formData, "clientEventId");
   const useClientId =
     clientEventId.length >= 12 &&
     clientEventId.length <= 36 &&
@@ -147,9 +149,9 @@ export async function updateEventInformationsAction(formData: FormData) {
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return;
   await assertEventOwnedByTraiteur(eventId);
-  const name = String(formData.get("name") ?? "").trim();
-  const venue = String(formData.get("venue") ?? "").trim();
-  const startsRaw = String(formData.get("startsAt") ?? "").trim();
+  const name = field(formData, "name");
+  const venue = field(formData, "venue");
+  const startsRaw = field(formData, "startsAt");
   if (!name) return;
   const startsAt = startsRaw ? new Date(startsRaw) : null;
   await prisma.event.update({
@@ -170,7 +172,7 @@ export async function updateEventConsignesAction(formData: FormData) {
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return;
   const ev = await assertEventOps(eventId);
-  const rawPayload = String(formData.get("instructionsPayload") ?? "").trim();
+  const rawPayload = field(formData, "instructionsPayload");
   let normalized = rawPayload
     ? validateAndNormalizeBlocksFromJson(rawPayload, ev.instructions)
     : parseInstructionsBlocks(ev.instructionsBlocks, ev.instructions);
@@ -250,7 +252,7 @@ export async function archiveEventAction(eventId: string) {
 
 /** Pour les formulaires sur les cartes d’événements (liste dashboard / événements). */
 export async function archiveEventFormAction(formData: FormData) {
-  const eventId = String(formData.get("eventId") ?? "").trim();
+  const eventId = field(formData, "eventId");
   if (!eventId) return;
   await archiveEventAction(eventId);
 }
@@ -259,8 +261,8 @@ export async function addMenuItemAction(formData: FormData) {
   const eventId = String(formData.get("eventId") ?? "");
   if (!eventId) return;
   await assertEventOps(eventId);
-  const name = String(formData.get("name") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const name = field(formData, "name");
+  const description = field(formData, "description");
   if (!name) return;
   const maxSort = await prisma.menuItem.aggregate({
     where: { eventId },
@@ -348,8 +350,8 @@ export async function toggleMenuItemHiddenAction(formData: FormData) {
 
 export async function addEventAccessoryAction(formData: FormData) {
   const eventId = String(formData.get("eventId") ?? "");
-  const name = String(formData.get("name") ?? "").trim();
-  const notes = String(formData.get("notes") ?? "").trim();
+  const name = field(formData, "name");
+  const notes = field(formData, "notes");
   const qtyRaw = parseInt(String(formData.get("quantity") ?? "1"), 10);
   const quantity = Number.isFinite(qtyRaw) && qtyRaw > 0 ? qtyRaw : 1;
   if (!eventId || !name) return;

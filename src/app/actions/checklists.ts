@@ -1,5 +1,7 @@
 "use server";
 
+import { field } from "@/lib/form-field";
+
 import { nanoid } from "nanoid";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
@@ -31,14 +33,14 @@ async function assertChecklistOwned(checklistId: string, userId: string) {
 
 export async function createChecklistAction(formData: FormData) {
   const userId = await requireOwner();
-  const name = String(formData.get("name") ?? "").trim();
+  const name = field(formData, "name");
   if (!name) {
     redirect("/dashboard/checklists/nouveau?erreur=nom");
   }
   const initialBlocks = [
     { type: "paragraph" as const, id: nanoid(), content: "" },
   ];
-  const clientChecklistId = String(formData.get("clientChecklistId") ?? "").trim();
+  const clientChecklistId = field(formData, "clientChecklistId");
   const useClientId =
     clientChecklistId.length >= 12 &&
     clientChecklistId.length <= 36 &&
@@ -88,7 +90,7 @@ export async function updateChecklistNameAction(formData: FormData) {
   const checklistId = String(formData.get("checklistId") ?? "");
   if (!checklistId) return;
   await assertChecklistOwned(checklistId, userId);
-  const name = String(formData.get("name") ?? "").trim();
+  const name = field(formData, "name");
   if (!name) return;
   await prisma.checklist.update({
     where: { id: checklistId },
@@ -103,7 +105,7 @@ export async function updateChecklistBlocksAction(formData: FormData) {
   const checklistId = String(formData.get("checklistId") ?? "");
   if (!checklistId) return;
   const cl = await assertChecklistOwned(checklistId, userId);
-  const rawPayload = String(formData.get("blocksPayload") ?? "").trim();
+  const rawPayload = field(formData, "blocksPayload");
   let normalized = rawPayload
     ? validateAndNormalizeBlocksFromJson(rawPayload, "")
     : parseInstructionsBlocks(cl.blocks, "");
