@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/auth";
 import { assertEventAccess, getSessionUser } from "@/lib/event-access";
+import { escalateDueRequests } from "@/lib/escalation";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -20,6 +21,11 @@ export async function GET(
     await assertEventAccess(id, user);
   } catch {
     return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  }
+  try {
+    await escalateDueRequests(id);
+  } catch (e) {
+    console.error("[GET demandes] escalade", e);
   }
   const requests = await prisma.guestRequest.findMany({
     where: { eventId: id },
