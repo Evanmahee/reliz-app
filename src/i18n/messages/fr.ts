@@ -13,6 +13,9 @@ const fr = {
     de: "DE",
   },
   nav: {
+    logoutTitle: "Se déconnecter ?",
+    logoutBody: "Vous ne recevrez plus les demandes des tables sur cet appareil tant que vous ne vous serez pas reconnecté.",
+    logoutConfirm: "Se déconnecter",
     dashboard: "Tableau de bord",
     events: "Événements",
     tasks: "Tâches",

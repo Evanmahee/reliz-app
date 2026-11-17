@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { usePathname } from "next/navigation";
-import { logoutAction } from "@/app/actions/auth";
 import { RelizLogo } from "@/components/brand/reliz-logo";
 import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
 import { isDashboardNavActive, navItemsForRole } from "@/lib/dashboard-nav";
 import { useT } from "@/i18n/i18n-provider";
-import { Button } from "@/components/ui/button";
 import { MaterialSymbol } from "@/components/ui/material-symbol";
 
 export function DashboardSidebar({
@@ -71,11 +70,9 @@ export function DashboardSidebar({
           </Link>
           <LocaleSwitcher returnTo={pathname} className="mt-3" />
         </div>
-        <form action={logoutAction} className="mt-3">
-          <Button type="submit" variant="outline" className="w-full justify-start">
-            {t("nav.logout")}
-          </Button>
-        </form>
+        <div className="mt-3">
+          <LogoutButton />
+        </div>
       </div>
     </aside>
   );

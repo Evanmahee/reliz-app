@@ -12,6 +12,9 @@ const de = {
     de: "DE",
   },
   nav: {
+    logoutTitle: "Abmelden?",
+    logoutBody: "Sie erhalten auf diesem Gerät keine Tischanfragen mehr, bis Sie sich wieder anmelden.",
+    logoutConfirm: "Abmelden",
     dashboard: "Dashboard",
     events: "Events",
     tasks: "Aufgaben",

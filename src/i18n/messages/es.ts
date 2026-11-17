@@ -12,6 +12,9 @@ const es = {
     de: "DE",
   },
   nav: {
+    logoutTitle: "¿Cerrar sesión?",
+    logoutBody: "Dejará de recibir las solicitudes de las mesas en este dispositivo hasta que vuelva a iniciar sesión.",
+    logoutConfirm: "Cerrar sesión",
     dashboard: "Panel",
     events: "Eventos",
     tasks: "Tareas",

@@ -13,6 +13,9 @@ const en = {
     de: "DE",
   },
   nav: {
+    logoutTitle: "Sign out?",
+    logoutBody: "You will stop receiving table requests on this device until you sign in again.",
+    logoutConfirm: "Sign out",
     dashboard: "Dashboard",
     events: "Events",
     tasks: "Tasks",
