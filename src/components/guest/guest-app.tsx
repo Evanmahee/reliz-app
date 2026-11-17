@@ -292,6 +292,15 @@ export function GuestApp({
               : t("guest.requestSent"),
         );
         closeSheet();
+        // Intégrée au site Reliz (démo) : on prévient la page, qui montre alors
+        // le téléphone de l'équipe. Aucune donnée transmise, juste le signal.
+        if (res.ok && window.parent !== window) {
+          try {
+            window.parent.postMessage({ type: "reliz:request-sent" }, "*");
+          } catch {
+            /* page hôte inaccessible : sans importance */
+          }
+        }
       });
     },
     [publicSlug, tableNumber, locationDraft, t, flash, rememberSent],
