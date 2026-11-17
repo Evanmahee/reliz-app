@@ -57,6 +57,8 @@ const de = {
     notActive: "Dieses Konto ist noch nicht aktiviert: öffnen Sie den Einladungslink aus der E-Mail.",
   },
   connexion: {
+    forgotSafety: "Aus Sicherheitsgründen wird der Link nur an die Adresse des Kontos gesendet, funktioniert einmal und läuft nach einer Stunde ab. Die Meldung ist gleich, ob ein Konto existiert oder nicht.",
+    forgotNewLink: "Neuen Link anfordern",
     accountTitle: "Mein Konto",
     accountName: "Für das Team sichtbarer Name",
     accountNameSave: "Name speichern",
@@ -82,7 +84,7 @@ const de = {
     forgotSubmit: "Link erhalten",
     forgotSent: "Falls ein Konto mit dieser E-Mail existiert, wurde soeben ein Link gesendet. Prüfen Sie auch den Spam-Ordner.",
     forgotBack: "Zurück zur Anmeldung",
-    forgotBadLink: "Dieser Link ist nicht mehr gültig. Fordern Sie einen neuen an.",
+    forgotBadLink: "Dieser Link ist nicht mehr gültig: bereits benutzt oder abgelaufen. Zu Ihrer Sicherheit funktioniert jeder Link nur einmal.",
     newTitle: "Neues Passwort",
     newPassword: "Neues Passwort",
     newConfirm: "Passwort bestätigen",

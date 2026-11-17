@@ -58,6 +58,8 @@ const fr = {
     notActive: "Ce compte n’est pas encore activé : ouvrez le lien d’invitation reçu par email.",
   },
   connexion: {
+    forgotSafety: "Par sécurité, le lien est envoyé uniquement à l’adresse du compte, ne sert qu’une fois et expire au bout d’une heure. Le message affiché est le même qu’un compte existe ou non.",
+    forgotNewLink: "Recevoir un nouveau lien",
     accountTitle: "Mon compte",
     accountName: "Nom affiché à l’équipe",
     accountNameSave: "Enregistrer le nom",
@@ -83,7 +85,7 @@ const fr = {
     forgotSubmit: "Recevoir le lien",
     forgotSent: "Si un compte existe pour cet email, un lien vient d’être envoyé. Pensez à vérifier les indésirables.",
     forgotBack: "Retour à la connexion",
-    forgotBadLink: "Ce lien n’est plus valide. Demandez-en un nouveau.",
+    forgotBadLink: "Ce lien n’est plus valable : il a déjà servi ou a expiré. Pour votre sécurité, chaque lien ne fonctionne qu’une seule fois.",
     newTitle: "Nouveau mot de passe",
     newPassword: "Nouveau mot de passe",
     newConfirm: "Confirmer le mot de passe",

@@ -58,6 +58,8 @@ const en = {
     notActive: "This account is not activated yet: open the invitation link received by email.",
   },
   connexion: {
+    forgotSafety: "For security, the link is only sent to the account’s address, works once and expires after one hour. The same message is shown whether an account exists or not.",
+    forgotNewLink: "Get a new link",
     accountTitle: "My account",
     accountName: "Name shown to the team",
     accountNameSave: "Save name",
@@ -83,7 +85,7 @@ const en = {
     forgotSubmit: "Send me the link",
     forgotSent: "If an account exists for this email, a link has just been sent. Check your spam folder.",
     forgotBack: "Back to sign in",
-    forgotBadLink: "This link is no longer valid. Request a new one.",
+    forgotBadLink: "This link is no longer valid: it has been used or has expired. For your security, each link only works once.",
     newTitle: "New password",
     newPassword: "New password",
     newConfirm: "Confirm password",

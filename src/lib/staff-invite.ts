@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { getAppBaseUrl } from "@/lib/app-url";
-import { brandedEmail, mailerConfigured, sendMail } from "@/lib/mailer";
+import { brandedEmail, codeEmail, mailerConfigured, sendMail } from "@/lib/mailer";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -108,19 +108,11 @@ export async function sendActivationCode(email: string): Promise<boolean> {
     console.error("[sendActivationCode]", error?.message);
     return false;
   }
-  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f7f2ec;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#120c0a">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#fff;border-radius:24px;padding:32px">
-<tr><td><div style="font-size:20px;font-weight:700">reliz</div>
-<p style="margin:24px 0 8px;font-size:15px;color:#5e4a3f">Votre code de vérification :</p>
-<div style="font-size:34px;font-weight:700;letter-spacing:8px;margin:0 0 16px">${code}</div>
-<p style="margin:0;font-size:13px;line-height:1.6;color:#8a776c">Saisissez-le sur la page d’activation. Il expire dans une heure. Ne le communiquez à personne, l’équipe Reliz ne vous le demandera jamais.</p>
-</td></tr></table></td></tr></table></body></html>`;
+  const mail = codeEmail(code);
   return sendMail({
     to: email,
     subject: `${code} est votre code Reliz`,
-    html,
-    text: `Votre code de vérification Reliz : ${code}\nIl expire dans une heure. Ne le communiquez à personne.`,
+    ...mail,
   });
 }
 

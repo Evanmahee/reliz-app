@@ -57,6 +57,8 @@ const es = {
     notActive: "Esta cuenta aún no está activada: abra el enlace de invitación recibido por correo.",
   },
   connexion: {
+    forgotSafety: "Por seguridad, el enlace solo se envía a la dirección de la cuenta, sirve una vez y caduca al cabo de una hora. El mensaje es el mismo exista o no la cuenta.",
+    forgotNewLink: "Recibir un nuevo enlace",
     accountTitle: "Mi cuenta",
     accountName: "Nombre visible para el equipo",
     accountNameSave: "Guardar el nombre",
@@ -82,7 +84,7 @@ const es = {
     forgotSubmit: "Recibir el enlace",
     forgotSent: "Si existe una cuenta con este correo, acabamos de enviar un enlace. Revise el correo no deseado.",
     forgotBack: "Volver al inicio de sesión",
-    forgotBadLink: "Este enlace ya no es válido. Solicite uno nuevo.",
+    forgotBadLink: "Este enlace ya no es válido: ya se usó o ha caducado. Por su seguridad, cada enlace solo funciona una vez.",
     newTitle: "Nueva contraseña",
     newPassword: "Nueva contraseña",
     newConfirm: "Confirmar la contraseña",
