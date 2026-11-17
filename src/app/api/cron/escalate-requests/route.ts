@@ -106,3 +106,6 @@ export async function POST(req: Request) {
     escalated,
   });
 }
+
+/** Vercel Cron appelle la route en GET (avec Authorization: Bearer CRON_SECRET). */
+export const GET = POST;
