@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { StaffCreateForm } from "@/components/dashboard/staff-create-form";
 import {
+  resendStaffInviteAction,
   resetStaffPasswordAction,
   setStaffSuspendedAction,
   updateStaffEventsAction,
@@ -10,7 +12,7 @@ import {
 import { USER_ROLE } from "@/lib/constants";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button, primaryButtonClassName } from "@/components/ui/button";
+import { primaryButtonClassName } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { wrapFormActionWithToast } from "@/components/ui/form-action-toast";
@@ -23,105 +25,21 @@ type StaffRow = {
   role: string;
   eventIds: string[];
   suspended: boolean;
+  pending: boolean;
 };
-
-function StaffCreateForm({
-  events,
-  createAction,
-  onCancel,
-}: {
-  events: { id: string; name: string }[];
-  createAction: (formData: FormData) => Promise<void>;
-  onCancel: () => void;
-}) {
-  const { t } = useT();
-  const [role, setRole] = useState<string>(USER_ROLE.STAFF);
-  const createWrapped = useMemo(
-    () =>
-      wrapFormActionWithToast(createAction, {
-        success: t("equipe.toastCreated"),
-      }),
-    [createAction, t],
-  );
-
-  return (
-    <form action={createWrapped} className="space-y-4">
-      <Input name="name" placeholder={t("equipe.namePh")} required />
-      <Input name="email" type="email" placeholder={t("equipe.emailPh")} required />
-      <Input
-        name="password"
-        type="password"
-        placeholder={t("equipe.passwordPh")}
-        minLength={10}
-        maxLength={72}
-        required
-      />
-      <div>
-        <label className="mb-1.5 block text-xs font-medium text-zinc-500">
-          {t("equipe.roleLabel")}
-        </label>
-        <select
-          name="role"
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          className="w-full rounded-[1.35rem] border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900"
-        >
-          <option value={USER_ROLE.STAFF}>{t("roles.STAFF")}</option>
-          <option value={USER_ROLE.MAITRE_HOTEL}>
-            {t("roles.MAITRE_HOTEL")}
-          </option>
-        </select>
-        <p className="mt-1.5 text-xs text-zinc-500">{t("equipe.roleHint")}</p>
-      </div>
-      {role === USER_ROLE.STAFF ? (
-        events.length > 0 ? (
-          <fieldset className="space-y-2 rounded-2xl bg-zinc-50 p-3">
-            <legend className="sr-only">{t("equipe.eventsAccess")}</legend>
-            <p className="text-sm font-medium text-zinc-800">{t("equipe.eventsAccess")}</p>
-            <p className="text-xs text-zinc-500">{t("equipe.eventsAccessHint")}</p>
-            {events.map((ev) => (
-              <label
-                key={ev.id}
-                className="flex items-center gap-2 text-sm text-zinc-700"
-              >
-                <input
-                  type="checkbox"
-                  name="eventIds"
-                  value={ev.id}
-                  className="rounded"
-                />
-                {ev.name}
-              </label>
-            ))}
-          </fieldset>
-        ) : (
-          <p className="text-xs text-zinc-500">{t("equipe.noLiveEvents")}</p>
-        )
-      ) : (
-        <p className="text-xs text-zinc-500">{t("equipe.maitreAccessHint")}</p>
-      )}
-      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {t("equipe.cancel")}
-        </Button>
-        <SubmitButton pendingLabel={t("equipe.creating")}>
-          {t("equipe.create")}
-        </SubmitButton>
-      </div>
-    </form>
-  );
-}
 
 export function StaffTeamManager({
   staff,
   events,
   createAction,
   deleteAction,
+  inviteByEmail,
 }: {
   staff: StaffRow[];
   events: { id: string; name: string }[];
   createAction: (formData: FormData) => Promise<void>;
   deleteAction: (formData: FormData) => Promise<void>;
+  inviteByEmail: boolean;
 }) {
   const { t } = useT();
   const [modalOpen, setModalOpen] = useState(false);
@@ -162,6 +80,7 @@ export function StaffTeamManager({
           events={events}
           createAction={createAction}
           onCancel={() => setModalOpen(false)}
+          inviteByEmail={inviteByEmail}
         />
       </Modal>
 
@@ -184,6 +103,11 @@ export function StaffTeamManager({
                       <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600">
                         {roleLabel(s.role)}
                       </span>
+                      {s.pending ? (
+                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                          {t("equipe.invitePending")}
+                        </span>
+                      ) : null}
                       {s.suspended ? (
                         <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700">
                           {t("equipe.suspended")}
@@ -193,6 +117,18 @@ export function StaffTeamManager({
                     <p className="text-sm text-zinc-500">{s.email}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    {s.pending && inviteByEmail ? (
+                      <form
+                        action={wrapFormActionWithToast(resendStaffInviteAction, {
+                          success: t("equipe.toastResent"),
+                        })}
+                      >
+                        <input type="hidden" name="staffId" value={s.id} />
+                        <SubmitButton variant="outline" className="text-xs" pendingLabel="…">
+                          {t("equipe.resendInvite")}
+                        </SubmitButton>
+                      </form>
+                    ) : null}
                     <form
                       action={wrapFormActionWithToast(setStaffSuspendedAction, {
                         success: s.suspended

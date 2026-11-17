@@ -35,7 +35,7 @@ export function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+    <div className="fixed inset-0 z-[70] flex items-end justify-center p-4 sm:items-center">
       <button
         type="button"
         className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px]"
@@ -46,7 +46,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 w-full max-w-md rounded-[1.75rem] border border-zinc-200 bg-white px-5 py-6 shadow-xl sm:px-6"
+        className="relative z-10 max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto overscroll-contain rounded-[1.75rem] border border-zinc-200 bg-white px-5 py-6 shadow-xl sm:max-w-lg sm:px-6"
       >
         <div className="mb-5 flex items-start justify-between gap-3">
           <h2 id={titleId} className="text-lg font-semibold text-zinc-900">

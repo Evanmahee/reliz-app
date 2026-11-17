@@ -13,7 +13,7 @@ import { getT } from "@/i18n/server";
 export default async function ConnexionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erreur?: string }>;
+  searchParams: Promise<{ erreur?: string; ok?: string }>;
 }) {
   const { t } = await getT();
   const sp = await searchParams;
@@ -34,6 +34,8 @@ export default async function ConnexionPage({
     msg = t("connexion.errors.db");
   } else if (sp.erreur === "session") {
     msg = t("connexion.errors.session");
+  } else if (sp.erreur === "nonactive") {
+    msg = t("activation.notActive");
   } else if (sp.erreur === "bloque") {
     msg = t("connexion.errors.bloque");
   } else if (sp.erreur === "nonautorise") {
@@ -57,6 +59,12 @@ export default async function ConnexionPage({
           <h1 className="mt-8 text-2xl font-semibold tracking-tight text-zinc-900">
             {t("connexion.title")}
           </h1>
+
+          {sp.ok === "active" ? (
+            <p role="status" className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              {t("activation.done")}
+            </p>
+          ) : null}
 
           <form action={loginAction} className="mt-8 space-y-5">
             {msg ? <ConnexionErrorBanner message={msg} /> : null}

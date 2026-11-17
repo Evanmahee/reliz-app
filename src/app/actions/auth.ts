@@ -50,6 +50,12 @@ export async function loginAction(formData: FormData) {
     redirect("/connexion?erreur=identifiants");
   }
 
+  // Collaborateur invité qui n'a pas encore activé son compte (lien + code email).
+  if ((data.user.app_metadata as { pending_activation?: boolean } | undefined)?.pending_activation) {
+    await supabase.auth.signOut();
+    redirect("/connexion?erreur=nonactive");
+  }
+
   try {
     await ensureUserProfile(data.user);
   } catch (e) {

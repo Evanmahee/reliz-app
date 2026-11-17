@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { createStaffMemberAction, deleteStaffMemberAction } from "@/app/actions/staff";
 import { getSessionUserId } from "@/lib/auth";
-import { getSessionUser, isOwner, suspendedUserIds } from "@/lib/event-access";
+import { getSessionUser, isOwner, pendingUserIds, suspendedUserIds } from "@/lib/event-access";
+import { mailerConfigured } from "@/lib/mailer";
 import { USER_ROLE } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { StaffTeamManager } from "@/components/dashboard/staff-team-manager";
@@ -35,12 +36,18 @@ export default async function EquipePage({
   ]);
 
   const sp = await searchParams;
-  const suspended = await suspendedUserIds(staff.map((s) => s.id));
+  const ids = staff.map((s) => s.id);
+  const [suspended, pending] = await Promise.all([suspendedUserIds(ids), pendingUserIds(ids)]);
 
   return (
     <div className="w-full space-y-6">
       {sp.ok ? (
-        <p className="text-sm font-medium text-emerald-700">{t("equipe.created")}</p>
+        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          {sp.ok === "invite" ? t("equipe.okInvite") : t("equipe.created")}
+        </p>
+      ) : null}
+      {sp.erreur === "invitation" ? (
+        <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{t("equipe.errInvitation")}</p>
       ) : null}
       {sp.erreur === "email" ? (
         <p className="text-sm text-red-600">{t("equipe.errEmail")}</p>
@@ -60,10 +67,12 @@ export default async function EquipePage({
           role: s.role,
           eventIds: s.staffEventAccess.map((a) => a.eventId),
           suspended: suspended.has(s.id),
+          pending: pending.has(s.id),
         }))}
         events={events}
         createAction={createStaffMemberAction}
         deleteAction={deleteStaffMemberAction}
+        inviteByEmail={mailerConfigured()}
       />
     </div>
   );

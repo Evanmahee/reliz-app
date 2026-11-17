@@ -2,6 +2,9 @@
 
 import { field } from "@/lib/form-field";
 import { checkPassword } from "@/lib/password-policy";
+import { mailerConfigured } from "@/lib/mailer";
+import { hitRateLimit } from "@/lib/rate-limit-db";
+import { sendStaffInvite } from "@/lib/staff-invite";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -27,7 +30,9 @@ function parseTeamRole(raw: string): (typeof TEAM_ROLES)[number] {
 export async function createStaffMemberAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) throw new Error("Réservé au traiteur");
-  const name = field(formData, "name");
+  const firstName = field(formData, "firstName", 60);
+  const lastName = field(formData, "lastName", 60);
+  const name = [firstName, lastName].filter(Boolean).join(" ") || field(formData, "name");
   const email = field(formData, "email").toLowerCase();
   const password = String(formData.get("password") ?? "");
   const role = parseTeamRole(String(formData.get("role") ?? ""));
@@ -35,7 +40,7 @@ export async function createStaffMemberAction(formData: FormData) {
     .getAll("eventIds")
     .map((v) => String(v).trim())
     .filter(Boolean);
-  if (!name || !email) {
+  if (!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
     redirect("/dashboard/equipe?erreur=champs");
   }
   if (checkPassword(password, email)) {
@@ -52,11 +57,15 @@ export async function createStaffMemberAction(formData: FormData) {
     redirect("/dashboard/equipe?erreur=champs");
   }
 
+  // Avec l'envoi d'emails configuré, le compte reste « en attente » jusqu'à
+  // l'activation par le collaborateur (lien unique + code reçu par email).
+  const inviteByEmail = mailerConfigured();
   const { data: created, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
     user_metadata: { name },
+    app_metadata: { pending_activation: inviteByEmail },
   });
   if (error || !created.user) {
     console.error("[createStaffMemberAction] Auth:", error?.message);
@@ -90,7 +99,39 @@ export async function createStaffMemberAction(formData: FormData) {
     }
   }
   revalidatePath("/dashboard/equipe");
+  if (inviteByEmail) {
+    const sent = await sendStaffInvite({
+      userId: staff.id,
+      email,
+      name,
+      ownerName: user.name || "Votre responsable",
+    });
+    redirect(sent ? "/dashboard/equipe?ok=invite" : "/dashboard/equipe?erreur=invitation");
+  }
   redirect("/dashboard/equipe?ok=1");
+}
+
+/** Renvoie l'invitation (nouveau lien, l'ancien ne marche plus). */
+export async function resendStaffInviteAction(formData: FormData) {
+  const user = await requireSessionUser();
+  if (!isOwner(user)) throw new Error("Réservé au traiteur");
+  const member = await prisma.user.findFirst({
+    where: { id: field(formData, "staffId"), employerId: user.id, role: { in: [...TEAM_ROLES] } },
+    select: { id: true, email: true, name: true },
+  });
+  if (!member) throw new Error("Membre introuvable");
+  const allowed = await hitRateLimit([
+    { key: `invite:resend:${member.id}`, limit: 5, windowMs: 60 * 60_000 },
+  ]);
+  if (!allowed.ok) throw new Error("Trop d'envois, réessayez plus tard");
+  const sent = await sendStaffInvite({
+    userId: member.id,
+    email: member.email,
+    name: member.name ?? "",
+    ownerName: user.name || "Votre responsable",
+  });
+  if (!sent) throw new Error("Invitation non envoyée");
+  revalidatePath("/dashboard/equipe");
 }
 
 export async function deleteStaffMemberAction(formData: FormData) {

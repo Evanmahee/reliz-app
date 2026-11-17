@@ -168,3 +168,17 @@ export function canUnclaimGuestRequest(
     user.role === USER_ROLE.OWNER || user.role === USER_ROLE.MAITRE_HOTEL
   );
 }
+
+/** Membres invités qui n'ont pas encore activé leur compte. */
+export async function pendingUserIds(ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  try {
+    const rows = await prisma.$queryRaw<{ id: string }[]>`
+      select id::text as id from auth.users
+      where id::text = any(${ids})
+        and coalesce((raw_app_meta_data->>'pending_activation')::boolean, false)`;
+    return new Set(rows.map((r) => r.id));
+  } catch {
+    return new Set();
+  }
+}

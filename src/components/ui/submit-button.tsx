@@ -21,7 +21,7 @@ export function SubmitButton({
   return (
     <Button
       type="submit"
-      disabled={disabled ?? pending}
+      disabled={Boolean(disabled) || pending}
       aria-busy={pending}
       {...props}
     >
