@@ -123,6 +123,8 @@ function buildCsp(frameAncestors: string): string {
 const nextConfig: NextConfig = {
   /** Hot reload / assets dev depuis un hostname type traiteur.local */
   allowedDevOrigins: ["*.local"],
+  /** Pas de pastille « N » de Next.js en développement (aperçus propres, démo du site comprise). */
+  devIndicators: false,
   poweredByHeader: false,
   async headers() {
     return [
