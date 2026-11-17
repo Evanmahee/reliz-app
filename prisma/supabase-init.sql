@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS "Checklist" (
 CREATE INDEX IF NOT EXISTS "Checklist_ownerId_idx" ON "Checklist" ("ownerId");
 
 -- -----------------------------------------------------------------------------
--- Compte démo (demo@reliz.app / demo1234)
+-- Compte démo (ancien mot de passe public : ne plus utiliser en production)
 -- Mot de passe hashé avec bcrypt (10 rounds)
 -- -----------------------------------------------------------------------------
 

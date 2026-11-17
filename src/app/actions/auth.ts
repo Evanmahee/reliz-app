@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { ensureUserProfile } from "@/lib/auth";
+import { ensureUserProfile, OwnerNotAllowedError } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function loginAction(formData: FormData) {
@@ -39,6 +39,9 @@ export async function loginAction(formData: FormData) {
   } catch (e) {
     console.error("[loginAction] profil User:", e);
     await supabase.auth.signOut();
+    if (e instanceof OwnerNotAllowedError) {
+      redirect("/connexion?erreur=nonautorise");
+    }
     redirect("/connexion?erreur=db");
   }
 

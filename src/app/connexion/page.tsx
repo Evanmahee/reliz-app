@@ -33,6 +33,8 @@ export default async function ConnexionPage({
     msg = t("connexion.errors.db");
   } else if (sp.erreur === "session") {
     msg = t("connexion.errors.session");
+  } else if (sp.erreur === "nonautorise") {
+    msg = t("connexion.errors.nonautorise");
   }
 
   return (

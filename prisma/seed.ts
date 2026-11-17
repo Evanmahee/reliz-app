@@ -17,8 +17,14 @@ if (existsSync(resolve(process.cwd(), ".env.local"))) {
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = "demo@reliz.app";
-  const password = "demo1234";
+  const email = process.env.SEED_DEMO_EMAIL?.trim() || "demo@reliz.app";
+  const password = process.env.SEED_DEMO_PASSWORD ?? "";
+  if (password.length < 12) {
+    console.log(
+      "Seed sauté : définir SEED_DEMO_PASSWORD (12 caractères min.) dans .env.local",
+    );
+    return;
+  }
   const name = "Démo Traiteur";
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
