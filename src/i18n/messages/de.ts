@@ -305,6 +305,8 @@ const de = {
   },
   events: {
     team: {
+      revokeHint: "Hier entfernen nimmt nur dieses Event weg. Um jeden Zugang zur App zu sperren:",
+      revokeLink: "Im Team sperren oder löschen",
       title: "Wer arbeitet bei diesem Event?",
       hint: "Tippen Sie auf eine Bedienung, um sie hinzuzufügen oder zu entfernen. Sie sieht das Event sofort.",
       count: "{n} Bedienung(en)",

@@ -12,6 +12,7 @@ export type EventTeamMember = {
   name: string | null;
   email: string;
   assigned: boolean;
+  suspended: boolean;
 };
 
 function initials(name: string | null, email: string) {
@@ -112,7 +113,13 @@ export function EventTeamPanel({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-zinc-900">{m.name || m.email}</span>
-                    <span className="block truncate text-xs text-zinc-500">{m.email}</span>
+                    {m.suspended ? (
+                      <span className="mt-0.5 inline-block rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700">
+                        {t("equipe.suspended")}
+                      </span>
+                    ) : (
+                      <span className="block truncate text-xs text-zinc-500">{m.email}</span>
+                    )}
                   </span>
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
@@ -127,6 +134,15 @@ export function EventTeamPanel({
           })}
         </ul>
       )}
+
+      {members.length > 0 ? (
+        <p className="mt-4 text-xs text-zinc-500">
+          {t("events.team.revokeHint")}{" "}
+          <Link href="/dashboard/equipe" className="font-medium text-brand-700 hover:underline">
+            {t("events.team.revokeLink")}
+          </Link>
+        </p>
+      ) : null}
 
       {adminCount > 0 ? (
         <p className="mt-4 flex items-center gap-2 text-xs text-zinc-500">

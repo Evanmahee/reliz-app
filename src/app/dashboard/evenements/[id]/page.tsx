@@ -3,7 +3,7 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS, USER_ROLE } from "@/lib/constants";
-import { getSessionUser, getOwnerId, isOwner, canManageEventOps } from "@/lib/event-access";
+import { getSessionUser, getOwnerId, isOwner, canManageEventOps, suspendedUserIds } from "@/lib/event-access";
 import { toDatetimeLocalValue } from "@/lib/datetime";
 import { parseInstructionsBlocks } from "@/lib/instructions-blocks";
 import { parseShoppingItems } from "@/lib/shopping-items";
@@ -77,7 +77,12 @@ export default async function EventDetailPage({
       ])
     : [[], [], 0];
   const assignedIds = new Set(eventAccess.map((a) => a.userId));
-  const team = staffMembers.map((m) => ({ ...m, assigned: assignedIds.has(m.id) }));
+  const suspendedIds = await suspendedUserIds(staffMembers.map((m) => m.id));
+  const team = staffMembers.map((m) => ({
+    ...m,
+    assigned: assignedIds.has(m.id),
+    suspended: suspendedIds.has(m.id),
+  }));
 
   const shoppingList = shoppingListRow
     ? {

@@ -305,6 +305,8 @@ const es = {
   },
   events: {
     team: {
+      revokeHint: "Quitar a alguien aquí solo le retira este evento. Para cortarle todo acceso a la aplicación:",
+      revokeLink: "Suspender o eliminar en Equipo",
       title: "¿Quién trabaja en este evento?",
       hint: "Toque un camarero para añadirlo o quitarlo. Ve el evento al instante.",
       count: "{n} camarero(s)",

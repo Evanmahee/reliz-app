@@ -311,6 +311,8 @@ const en = {
   },
   events: {
     team: {
+      revokeHint: "Removing someone here only takes away this event. To cut all access to the app:",
+      revokeLink: "Suspend or delete in Team",
       title: "Who works on this event?",
       hint: "Tap a waiter to add or remove them. They see the event right away.",
       count: "{n} waiter(s)",

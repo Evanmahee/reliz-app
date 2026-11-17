@@ -313,6 +313,8 @@ const fr = {
   },
   events: {
     team: {
+      revokeHint: "Retirer quelqu’un ici lui enlève seulement cet événement. Pour lui couper tout accès à l’application :",
+      revokeLink: "Suspendre ou supprimer dans Équipe",
       title: "Qui travaille sur cet événement ?",
       hint: "Touchez un serveur pour l’ajouter ou le retirer. Il voit l’événement tout de suite.",
       count: "{n} serveur(s)",
