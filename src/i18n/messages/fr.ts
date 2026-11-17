@@ -53,6 +53,7 @@ const fr = {
     guestScanHint: "Interface invités : scan du QR code sur place.",
     errors: {
       identifiants: "Email ou mot de passe incorrect.",
+      nonautorise: "Ce compte n’a pas d’accès traiteur. Demandez à l’administrateur de vous ajouter.",
       champs: "Merci de remplir tous les champs.",
       config:
         "Variables manquantes : NEXT_PUBLIC_SUPABASE_URL, clé anon, et DATABASE_URL (voir .env.example).",
@@ -399,7 +400,7 @@ const fr = {
       historyHint:
         "Demandes marquées comme traitées, les plus récentes en premier.",
       loadError: "Impossible de charger les demandes.",
-      networkError: "Réseau indisponible.",
+      networkError: "Connexion faible : dernières demandes affichées, nouvel essai automatique.",
       noPending: "Aucune demande en attente.",
       zoneAll: "Toutes les zones",
       zoneNone: "Sans zone",
@@ -530,6 +531,9 @@ const fr = {
       "Indiquez vos allergies : l’équipe en sera informée pour votre table.",
     requestSent: "Demande envoyée.",
     retrying: "Connexion faible, nouvel essai…",
+    queuedOffline: "Pas de réseau : votre demande partira dès que la connexion revient.",
+    queuedBanner: "{n} demande(s) en attente de réseau…",
+    queuedSent: "Connexion retrouvée : demande envoyée.",
     tabMenu: "Carte",
     tabService: "Services",
     tabStaff: "À table",

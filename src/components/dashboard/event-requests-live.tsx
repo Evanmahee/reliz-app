@@ -48,7 +48,9 @@ export function EventRequestsLive({
 }) {
   const { t, locale } = useT();
   const tRef = useRef(t);
-  tRef.current = t;
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
   const [rows, setRows] = useState<Row[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -65,36 +67,46 @@ export function EventRequestsLive({
     return typ;
   }
 
-  const load = useCallback(async () => {
+  /** Tables et allergies changent peu : rechargées toutes les 30 s seulement. */
+  const lastAuxLoadRef = useRef(0);
+  const inflightRef = useRef(false);
+
+  const load = useCallback(async (): Promise<boolean> => {
+    if (inflightRef.current) return true;
+    inflightRef.current = true;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10_000);
+    const opts = { cache: "no-store" as const, signal: controller.signal };
+    const withAux = Date.now() - lastAuxLoadRef.current > 30_000;
     try {
       const [reqRes, tablesRes, allergiesRes] = await Promise.all([
-        fetch(`/api/evenements/${eventId}/demandes`, { cache: "no-store" }),
-        fetch(`/api/events/${eventId}/tables`, { cache: "no-store" }),
-        fetch(`/api/events/${eventId}/allergies`, { cache: "no-store" }),
+        fetch(`/api/evenements/${eventId}/demandes`, opts),
+        withAux ? fetch(`/api/events/${eventId}/tables`, opts) : null,
+        withAux ? fetch(`/api/events/${eventId}/allergies`, opts) : null,
       ]);
       if (!reqRes.ok) {
         setErr(tRef.current("events.requests.loadError"));
-        return;
+        return false;
       }
       const data = (await reqRes.json()) as Row[];
       setErr(null);
       setRows(data);
 
-      let fromTables: string[] = [];
-      if (tablesRes.ok) {
+      if (tablesRes?.ok) {
         const tables = (await tablesRes.json()) as {
           zone?: string;
         }[];
-        fromTables = tables
+        const fromTables = tables
           .map((tb) => (tb.zone ?? "").trim())
           .filter(Boolean);
+        setKnownZones(
+          Array.from(new Set(fromTables)).sort((a, b) =>
+            a.localeCompare(b, undefined, { sensitivity: "base" }),
+          ),
+        );
       }
-      const zones = Array.from(new Set(fromTables)).sort((a, b) =>
-        a.localeCompare(b, undefined, { sensitivity: "base" }),
-      );
-      setKnownZones(zones);
 
-      if (allergiesRes.ok) {
+      if (allergiesRes?.ok) {
         const allergies = (await allergiesRes.json()) as {
           tableNumber: string;
           content: string;
@@ -109,22 +121,51 @@ export function EventRequestsLive({
         }
         setAllergiesByTable(joined);
       }
+      if (withAux && tablesRes?.ok && allergiesRes?.ok) {
+        lastAuxLoadRef.current = Date.now();
+      }
+      return true;
     } catch {
+      // Réseau faible : on garde les dernières demandes affichées.
       setErr(tRef.current("events.requests.networkError"));
+      return false;
+    } finally {
+      clearTimeout(timer);
+      inflightRef.current = false;
     }
   }, [eventId]);
 
+  /**
+   * Rafraîchissement économe : toutes les 8 s, espacé jusqu'à 30 s après des
+   * échecs, en pause quand l'écran est masqué, immédiat au retour du réseau.
+   */
   useEffect(() => {
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let failures = 0;
+
     async function tick() {
       if (cancelled) return;
-      await load();
+      clearTimeout(timer);
+      if (document.visibilityState === "hidden") return;
+      const ok = await load();
+      if (cancelled) return;
+      failures = ok ? 0 : Math.min(failures + 1, 3);
+      const delay = [8000, 15000, 25000, 30000][failures]!;
+      timer = setTimeout(() => void tick(), delay);
     }
+    const wake = () => {
+      if (document.visibilityState === "visible") void tick();
+    };
+
     void tick();
-    const id = setInterval(() => void tick(), 8000);
+    window.addEventListener("online", wake);
+    document.addEventListener("visibilitychange", wake);
     return () => {
       cancelled = true;
-      clearInterval(id);
+      clearTimeout(timer);
+      window.removeEventListener("online", wake);
+      document.removeEventListener("visibilitychange", wake);
     };
   }, [load]);
 

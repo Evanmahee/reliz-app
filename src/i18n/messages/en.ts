@@ -53,6 +53,7 @@ const en = {
     guestScanHint: "Guest interface: scan the QR code on site.",
     errors: {
       identifiants: "Incorrect email or password.",
+      nonautorise: "This account has no caterer access. Ask the administrator to add you.",
       champs: "Please fill in all fields.",
       config:
         "Missing env vars: NEXT_PUBLIC_SUPABASE_URL, anon key, and DATABASE_URL (see .env.example).",
@@ -395,7 +396,7 @@ const en = {
       historyHint:
         "Requests marked as handled, most recent first.",
       loadError: "Could not load requests.",
-      networkError: "Network unavailable.",
+      networkError: "Weak connection: showing the latest requests, retrying automatically.",
       noPending: "No pending requests.",
       zoneAll: "All zones",
       zoneNone: "No zone",
@@ -525,6 +526,9 @@ const en = {
       "Share any allergies so the team is notified for your table.",
     requestSent: "Request sent.",
     retrying: "Weak connection, retrying…",
+    queuedOffline: "No network: your request will be sent as soon as the connection is back.",
+    queuedBanner: "{n} request(s) waiting for network…",
+    queuedSent: "Back online: request sent.",
     tabMenu: "Menu",
     tabService: "Services",
     tabStaff: "Staff",

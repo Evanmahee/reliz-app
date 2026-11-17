@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { GUEST_REQUEST, REQUEST_CATEGORY } from "@/lib/constants";
-import { postGuestRequestWithRetry } from "@/lib/guest-request-submit";
+import {
+  enqueueGuestRequest,
+  flushGuestRequestQueue,
+  newClientRequestId,
+  pendingGuestRequestCount,
+  postGuestRequestWithRetry,
+} from "@/lib/guest-request-submit";
 import {
   REQUEST_CATEGORY_ORDER,
   REQUEST_CATEGORY_STYLES,
@@ -55,6 +61,7 @@ export function GuestApp({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
+  const [queuedCount, setQueuedCount] = useState(0);
 
   const [productNote, setProductNote] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
@@ -64,6 +71,7 @@ export function GuestApp({
   );
   const [allergiesDraft, setAllergiesDraft] = useState("");
 
+  /* eslint-disable react-hooks/set-state-in-effect -- lecture de sessionStorage après hydratation */
   useEffect(() => {
     const fromUrl = initialTableNumber?.trim();
     const locFromUrl = initialTableLocation?.trim();
@@ -82,6 +90,37 @@ export function GuestApp({
     }
     setHydrated(true);
   }, [storageKey, locationKey, initialTableNumber, initialTableLocation]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Faible connexion : les demandes non parties sont renvoyées dès que le
+  // réseau revient (événement « online », retour sur l'onglet, toutes les 20 s).
+  useEffect(() => {
+    let cancelled = false;
+    async function flush() {
+      const sent = await flushGuestRequestQueue();
+      if (cancelled) return;
+      setQueuedCount(pendingGuestRequestCount(publicSlug));
+      if (sent > 0) {
+        setFeedback(t("guest.queuedSent"));
+        setTimeout(() => setFeedback(null), 2400);
+      }
+    }
+    void flush();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void flush();
+    };
+    window.addEventListener("online", flush);
+    document.addEventListener("visibilitychange", onVisible);
+    const id = setInterval(() => {
+      if (pendingGuestRequestCount(publicSlug) > 0) void flush();
+    }, 20_000);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("online", flush);
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(id);
+    };
+  }, [publicSlug, t]);
 
   function saveTable(e: React.FormEvent) {
     e.preventDefault();
@@ -126,23 +165,34 @@ export function GuestApp({
             : null) ??
           locationDraft.trim();
         const allergies = allergiesDraft.trim();
-        const res = await postGuestRequestWithRetry(
-          {
-            publicSlug,
-            tableNumber,
-            tableLocation: loc || undefined,
-            type,
-            category,
-            message,
-            allergies: allergies || undefined,
-          },
-          () => setRetrying(true),
+        const payload = {
+          publicSlug,
+          tableNumber,
+          tableLocation: loc || undefined,
+          type,
+          category,
+          message,
+          allergies: allergies || undefined,
+          clientRequestId: newClientRequestId(),
+        };
+        const res = await postGuestRequestWithRetry(payload, () =>
+          setRetrying(true),
         );
         setRetrying(false);
+        if (!res.ok && res.error === "network") {
+          // Pas de réseau : la demande est gardée et partira automatiquement.
+          enqueueGuestRequest(payload);
+          setQueuedCount(pendingGuestRequestCount(publicSlug));
+          flash(t("guest.queuedOffline"));
+          setProductNote("");
+          setSelectedProduct(null);
+          setServiceText("");
+          setServiceCategory(REQUEST_CATEGORY.MISC);
+          if (allergies) setAllergiesDraft("");
+          return;
+        }
         if (!res.ok) {
-          if (res.error === "network") {
-            setError(t("guest.errors.sendFailed"));
-          } else if (res.detail) {
+          if (res.detail) {
             setError(res.detail);
           } else {
             setError(t("guest.errors.sendFailed"));
@@ -264,6 +314,11 @@ export function GuestApp({
         {retrying ? (
           <p className="mt-3 text-sm font-medium text-amber-800">
             {t("guest.retrying")}
+          </p>
+        ) : null}
+        {queuedCount > 0 ? (
+          <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+            {t("guest.queuedBanner").replace("{n}", String(queuedCount))}
           </p>
         ) : null}
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
