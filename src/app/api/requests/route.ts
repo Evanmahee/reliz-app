@@ -6,7 +6,8 @@ import {
   GUEST_REQUEST_STATUS,
   REQUEST_CATEGORY,
 } from "@/lib/constants";
-import { checkRateLimit, clientIpFromRequest } from "@/lib/rate-limit";
+import { clientIpFromRequest } from "@/lib/rate-limit";
+import { hitRateLimit } from "@/lib/rate-limit-db";
 import { prisma } from "@/lib/prisma";
 
 const RATE_LIMIT = 15;
@@ -73,11 +74,10 @@ export async function POST(req: Request) {
   }
 
   const ip = clientIpFromRequest(req);
-  const limited = checkRateLimit({
-    key: `requests:${ip}:${publicSlug}`,
-    limit: RATE_LIMIT,
-    windowMs: RATE_WINDOW_MS,
-  });
+  const limited = await hitRateLimit([
+    { key: `requests:${ip}:${publicSlug}`, limit: RATE_LIMIT, windowMs: RATE_WINDOW_MS },
+    { key: `requests:ip:${ip}`, limit: 60, windowMs: 10 * 60_000 },
+  ]);
   if (!limited.ok) {
     const loc = localeFromRequest(req);
     return NextResponse.json(

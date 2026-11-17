@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { ensureUserProfile, OwnerNotAllowedError } from "@/lib/auth";
+import { clearRateLimit, hitRateLimit } from "@/lib/rate-limit-db";
+import { requestIp } from "@/lib/request-ip";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function loginAction(formData: FormData) {
@@ -9,6 +11,20 @@ export async function loginAction(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   if (!email || !password) {
     redirect("/connexion?erreur=champs");
+  }
+  if (email.length > 254 || password.length > 200) {
+    redirect("/connexion?erreur=identifiants");
+  }
+
+  // Anti force brute : 10 essais / 15 min par compte, 30 par adresse IP.
+  const ip = await requestIp();
+  const emailKey = `login:email:${email}`;
+  const allowed = await hitRateLimit([
+    { key: `login:ip:${ip}`, limit: 30, windowMs: 15 * 60_000 },
+    { key: emailKey, limit: 10, windowMs: 15 * 60_000 },
+  ]);
+  if (!allowed.ok) {
+    redirect("/connexion?erreur=bloque");
   }
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) {
@@ -30,7 +46,7 @@ export async function loginAction(formData: FormData) {
   });
 
   if (error || !data.user) {
-    console.error("[loginAction] Auth:", error?.message);
+    console.warn("[loginAction] échec de connexion");
     redirect("/connexion?erreur=identifiants");
   }
 
@@ -45,6 +61,7 @@ export async function loginAction(formData: FormData) {
     redirect("/connexion?erreur=db");
   }
 
+  await clearRateLimit(emailKey);
   redirect("/dashboard");
 }
 

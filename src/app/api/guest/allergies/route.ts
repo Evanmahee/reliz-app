@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { EVENT_STATUS } from "@/lib/constants";
-import { checkRateLimit, clientIpFromRequest } from "@/lib/rate-limit";
+import { clientIpFromRequest } from "@/lib/rate-limit";
+import { hitRateLimit } from "@/lib/rate-limit-db";
 import { prisma } from "@/lib/prisma";
 
 const TABLE_NUMBER_RE = /^[a-zA-Z0-9\- ]{1,20}$/;
@@ -27,11 +28,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Texte invalide (max 500)" }, { status: 400 });
   }
 
-  const limited = checkRateLimit({
-    key: `allergies:${clientIpFromRequest(req)}:${publicSlug}`,
-    limit: 5,
-    windowMs: 60_000,
-  });
+  const limited = await hitRateLimit([
+    { key: `allergies:${clientIpFromRequest(req)}:${publicSlug}`, limit: 5, windowMs: 10 * 60_000 },
+  ]);
   if (!limited.ok) {
     return NextResponse.json(
       { error: "Trop de tentatives, réessayez dans une minute." },

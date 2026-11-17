@@ -190,3 +190,13 @@ model GuestAllergy {
   @@index([eventId])
   @@index([eventId, tableNumber])
 }
+
+/// Compteur anti-abus partagé entre toutes les instances (connexion, mot de passe oublié, invités).
+model RateLimitHit {
+  id        BigInt   @id @default(autoincrement())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+  @@index([createdAt])
+}
