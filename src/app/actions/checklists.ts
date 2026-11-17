@@ -4,7 +4,6 @@ import { nanoid } from "nanoid";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSessionUserId } from "@/lib/auth";
 import { isNextRedirectError } from "@/lib/is-next-redirect-error";
 import {
   ensureBlocksDraft,
@@ -12,13 +11,14 @@ import {
   validateAndNormalizeBlocksFromJson,
   INSTRUCTIONS_MAX_BLOCKS,
 } from "@/lib/instructions-blocks";
+import { isOwner, requireSessionUser } from "@/lib/event-access";
 import { prisma } from "@/lib/prisma";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 async function requireOwner() {
-  const userId = await getSessionUserId();
-  if (!userId) throw new Error("Non authentifié");
-  return userId;
+  const user = await requireSessionUser();
+  if (!isOwner(user)) throw new Error("Réservé au traiteur");
+  return user.id;
 }
 
 async function assertChecklistOwned(checklistId: string, userId: string) {

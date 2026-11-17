@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { USER_ROLE, STAFF_TASK_STATUS } from "@/lib/constants";
 import {
   assertEventAccess,
+  canManageEventOps,
   getOwnerId,
   isOwner,
   requireSessionUser,
@@ -173,6 +174,7 @@ export async function createStaffTaskAction(formData: FormData) {
   const assignedToId =
     String(formData.get("assignedToId") ?? "").trim() || null;
   if (!eventId || !title) return;
+  if (!canManageEventOps(user)) return;
   await assertEventAccess(eventId, user);
   const ownerId = getOwnerId(user);
   if (assignedToId) {
@@ -207,7 +209,10 @@ export async function toggleStaffTaskDoneAction(formData: FormData) {
   if (!taskId || !eventId) return;
   await assertEventAccess(eventId, user);
   await prisma.staffTask.updateMany({
-    where: { id: taskId, eventId },
+    // Un serveur ne coche que ses propres tâches ; OWNER / MH toutes.
+    where: canManageEventOps(user)
+      ? { id: taskId, eventId }
+      : { id: taskId, eventId, assignedToId: user.id },
     data: {
       status: done ? STAFF_TASK_STATUS.DONE : STAFF_TASK_STATUS.PENDING,
     },
@@ -221,6 +226,7 @@ export async function deleteStaffTaskAction(formData: FormData) {
   const taskId = String(formData.get("taskId") ?? "").trim();
   const eventId = String(formData.get("eventId") ?? "").trim();
   if (!taskId || !eventId) return;
+  if (!canManageEventOps(user)) return;
   await assertEventAccess(eventId, user);
   await prisma.staffTask.deleteMany({ where: { id: taskId, eventId } });
   revalidatePath(`/dashboard/evenements/${eventId}`);
