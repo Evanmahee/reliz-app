@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import {
   EVENT_STATUS,
   GUEST_REQUEST,
+  GUEST_REQUEST_STATUS,
   REQUEST_CATEGORY,
 } from "@/lib/constants";
 import { checkRateLimit, clientIpFromRequest } from "@/lib/rate-limit";
@@ -13,6 +15,12 @@ const RATE_WINDOW_MS = 60_000;
 const ALLOWED_TYPES = new Set<string>(Object.values(GUEST_REQUEST));
 const ALLOWED_CATEGORIES = new Set<string>(Object.values(REQUEST_CATEGORY));
 const TABLE_NUMBER_RE = /^[a-zA-Z0-9\- ]{1,20}$/;
+const CLIENT_ID_RE = /^[a-zA-Z0-9_-]{12,36}$/;
+
+/** Garde-fous en base (valables sur toutes les instances serverless). */
+const TABLE_MAX_PER_MINUTE = 6;
+const TABLE_MAX_OPEN = 15;
+const TABLE_MAX_ALLERGY_NOTES = 10;
 
 const RATE_LIMIT_MESSAGES = {
   fr: "Trop de demandes. Réessayez dans une minute.",
@@ -48,6 +56,20 @@ export async function POST(req: Request) {
   const publicSlug = String(body.publicSlug ?? "").trim();
   if (!publicSlug) {
     return NextResponse.json({ error: "publicSlug requis" }, { status: 400 });
+  }
+
+  // Identifiant généré par le téléphone : un renvoi (réseau faible, file
+  // hors-ligne) ne crée jamais de doublon.
+  const clientRequestId = String(body.clientRequestId ?? "").trim();
+  const useClientId = CLIENT_ID_RE.test(clientRequestId);
+  if (useClientId) {
+    const already = await prisma.guestRequest.findUnique({
+      where: { id: clientRequestId },
+      select: { id: true },
+    });
+    if (already) {
+      return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
+    }
   }
 
   const ip = clientIpFromRequest(req);
@@ -143,16 +165,56 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Événement indisponible" }, { status: 404 });
   }
 
-  const tableRow = await prisma.table.findFirst({
-    where: { eventId: event.id, number: tableNumber },
-    select: { isVip: true, zone: true },
-  });
+  const [tableRow, tableCount] = await Promise.all([
+    prisma.table.findFirst({
+      where: { eventId: event.id, number: tableNumber },
+      select: { isVip: true, zone: true },
+    }),
+    prisma.table.count({ where: { eventId: event.id } }),
+  ]);
+  if (tableCount > 0 && !tableRow) {
+    return NextResponse.json(
+      { error: "Table inconnue pour cet événement" },
+      { status: 400 },
+    );
+  }
+
+  const [recentCount, openCount] = await Promise.all([
+    prisma.guestRequest.count({
+      where: {
+        eventId: event.id,
+        tableNumber,
+        createdAt: { gte: new Date(Date.now() - 60_000) },
+      },
+    }),
+    prisma.guestRequest.count({
+      where: {
+        eventId: event.id,
+        tableNumber,
+        status: {
+          in: [
+            GUEST_REQUEST_STATUS.PENDING,
+            GUEST_REQUEST_STATUS.IN_PROGRESS,
+            GUEST_REQUEST_STATUS.ESCALATED,
+          ],
+        },
+      },
+    }),
+  ]);
+  if (recentCount >= TABLE_MAX_PER_MINUTE || openCount >= TABLE_MAX_OPEN) {
+    const loc = localeFromRequest(req);
+    return NextResponse.json(
+      { error: RATE_LIMIT_MESSAGES[loc], messages: RATE_LIMIT_MESSAGES },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
+  }
   const resolvedLocation =
     tableLocation || (tableRow?.zone ? tableRow.zone : "");
 
   try {
     const row = await prisma.guestRequest.create({
       data: {
+        ...(useClientId ? { id: clientRequestId } : {}),
         eventId: event.id,
         tableNumber,
         tableLocation: resolvedLocation,
@@ -163,7 +225,12 @@ export async function POST(req: Request) {
       },
     });
 
-    if (allergies) {
+    const allergyNotes = allergies
+      ? await prisma.guestAllergy.count({
+          where: { eventId: event.id, tableNumber },
+        })
+      : 0;
+    if (allergies && allergyNotes < TABLE_MAX_ALLERGY_NOTES) {
       await prisma.guestAllergy.create({
         data: {
           eventId: event.id,
@@ -175,6 +242,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json(row, { status: 201 });
   } catch (e) {
+    if (
+      useClientId &&
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2002"
+    ) {
+      return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
+    }
     console.error("[POST /api/requests]", e);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
