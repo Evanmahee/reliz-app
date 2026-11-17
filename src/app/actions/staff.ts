@@ -322,3 +322,31 @@ export async function resetStaffPasswordAction(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard/equipe");
 }
+
+/** Depuis la fiche événement : ajoute ou retire un serveur de l'événement. */
+export async function setEventStaffAccessAction(
+  eventId: string,
+  staffId: string,
+  assigned: boolean,
+) {
+  const user = await requireSessionUser();
+  if (!isOwner(user)) throw new Error("Réservé au traiteur");
+  const [event, member] = await Promise.all([
+    prisma.event.findFirst({ where: { id: eventId, ownerId: user.id }, select: { id: true } }),
+    prisma.user.findFirst({
+      where: { id: staffId, employerId: user.id, role: USER_ROLE.STAFF },
+      select: { id: true },
+    }),
+  ]);
+  if (!event || !member) throw new Error("Introuvable");
+  if (assigned) {
+    await prisma.staffEventAccess.createMany({
+      data: [{ userId: member.id, eventId: event.id }],
+      skipDuplicates: true,
+    });
+  } else {
+    await prisma.staffEventAccess.deleteMany({ where: { userId: member.id, eventId: event.id } });
+  }
+  revalidatePath(`/dashboard/evenements/${event.id}`);
+  revalidatePath("/dashboard/equipe");
+}

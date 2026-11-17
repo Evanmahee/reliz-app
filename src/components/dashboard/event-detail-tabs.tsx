@@ -25,6 +25,10 @@ import {
   EventTablesPanel,
   type EventTableRow,
 } from "@/components/dashboard/event-tables-panel";
+import {
+  EventTeamPanel,
+  type EventTeamMember,
+} from "@/components/dashboard/event-team-panel";
 import { Card } from "@/components/ui/card";
 import { wrapFormActionWithToast } from "@/components/ui/form-action-toast";
 import { Input } from "@/components/ui/input";
@@ -35,6 +39,7 @@ import type { InstructionBlock } from "@/lib/instructions-blocks";
 
 type TabId =
   | "infos"
+  | "team"
   | "consignes"
   | "menu"
   | "accessories"
@@ -44,6 +49,7 @@ type TabId =
 
 const TAB_IDS: TabId[] = [
   "infos",
+  "team",
   "consignes",
   "menu",
   "accessories",
@@ -84,6 +90,8 @@ export function EventDetailTabs({
   guestUrl,
   publicSlug,
   qrDownloadHref,
+  team,
+  teamAdminCount,
 }: {
   eventId: string;
   archived: boolean;
@@ -98,6 +106,8 @@ export function EventDetailTabs({
   accessories: EventDetailTabsAccessory[];
   shoppingList: EventShoppingListData | null;
   staffMembers: { id: string; name: string | null; email: string }[];
+  team: EventTeamMember[];
+  teamAdminCount: number;
   guestUrl: string;
   publicSlug: string;
   qrDownloadHref: string;
@@ -110,6 +120,7 @@ export function EventDetailTabs({
   const tabLabels = useMemo(
     () => ({
       infos: t("events.tabs.infos"),
+      team: t("events.tabs.team"),
       consignes: t("events.tabs.consignes"),
       menu: t("events.tabs.menu"),
       accessories: t("events.tabs.accessories"),
@@ -123,10 +134,11 @@ export function EventDetailTabs({
   const visibleTabs = isOwner
     ? TAB_IDS
     : canManageOps
-      ? TAB_IDS.filter((id) => id !== "infos" && id !== "shopping")
+      ? TAB_IDS.filter((id) => id !== "infos" && id !== "shopping" && id !== "team")
       : TAB_IDS.filter(
           (id) =>
             id !== "infos" &&
+            id !== "team" &&
             id !== "qr" &&
             id !== "shopping" &&
             id !== "tables",
@@ -251,6 +263,17 @@ export function EventDetailTabs({
                 </SubmitButton>
               </form>
             )}
+          </div>
+        ) : null}
+
+        {tab === "team" && isOwner ? (
+          <div role="tabpanel" id={`${uid}-panel-team`} aria-labelledby={`${uid}-tab-team`}>
+            <EventTeamPanel
+              eventId={eventId}
+              members={team}
+              adminCount={teamAdminCount}
+              archived={archived}
+            />
           </div>
         ) : null}
 

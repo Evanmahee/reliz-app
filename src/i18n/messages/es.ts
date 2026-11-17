@@ -304,6 +304,17 @@ const es = {
     pageEmpty: "Ninguna tarea pendiente.",
   },
   events: {
+    team: {
+      title: "¿Quién trabaja en este evento?",
+      hint: "Toque un camarero para añadirlo o quitarlo. Ve el evento al instante.",
+      count: "{n} camarero(s)",
+      added: "Camarero añadido al evento",
+      removed: "Camarero retirado del evento",
+      error: "No se pudo guardar, inténtelo de nuevo.",
+      emptyTitle: "Aún no hay camareros en su equipo.",
+      emptyLink: "Añadir miembros",
+      admins: "{n} administrador(es) ya ven todos los eventos.",
+    },
     listTag: "Eventos",
     listTitle: "Tus eventos activos",
     listSubtitle: "Crea un evento para generar un QR de invitados, gestionar la carta y seguir las solicitudes en directo.",
@@ -332,6 +343,7 @@ const es = {
     archiving: "Archivando…",
     tabs: {
       infos: "Información",
+      team: "Equipo",
       consignes: "Tareas",
       menu: "Menú",
       accessories: "Accesorios",

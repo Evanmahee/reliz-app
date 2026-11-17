@@ -60,13 +60,24 @@ export default async function EventDetailPage({
   const accessories = event.accessories;
   const shoppingListRow = ownerView ? event.shoppingLists[0] ?? null : null;
 
-  const staffMembers = ownerView
-    ? await prisma.user.findMany({
-        where: { employerId: ownerId, role: USER_ROLE.STAFF },
-        select: { id: true, name: true, email: true },
-        orderBy: { name: "asc" },
-      })
-    : [];
+  const [staffMembers, eventAccess, teamAdminCount] = ownerView
+    ? await Promise.all([
+        prisma.user.findMany({
+          where: { employerId: ownerId, role: USER_ROLE.STAFF },
+          select: { id: true, name: true, email: true },
+          orderBy: { name: "asc" },
+        }),
+        prisma.staffEventAccess.findMany({
+          where: { eventId: event.id },
+          select: { userId: true },
+        }),
+        prisma.user.count({
+          where: { employerId: ownerId, role: USER_ROLE.MAITRE_HOTEL },
+        }),
+      ])
+    : [[], [], 0];
+  const assignedIds = new Set(eventAccess.map((a) => a.userId));
+  const team = staffMembers.map((m) => ({ ...m, assigned: assignedIds.has(m.id) }));
 
   const shoppingList = shoppingListRow
     ? {
@@ -149,6 +160,8 @@ export default async function EventDetailPage({
         }))}
         shoppingList={shoppingList}
         staffMembers={staffMembers}
+        team={team}
+        teamAdminCount={teamAdminCount}
         guestUrl={guestUrl}
         publicSlug={event.publicSlug}
         qrDownloadHref={`/api/evenements/${event.id}/qr`}

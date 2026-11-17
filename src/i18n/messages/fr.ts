@@ -312,6 +312,17 @@ const fr = {
     pageEmpty: "Aucune tâche en attente.",
   },
   events: {
+    team: {
+      title: "Qui travaille sur cet événement ?",
+      hint: "Touchez un serveur pour l’ajouter ou le retirer. Il voit l’événement tout de suite.",
+      count: "{n} serveur(s)",
+      added: "Serveur ajouté à l’événement",
+      removed: "Serveur retiré de l’événement",
+      error: "Modification impossible, réessayez.",
+      emptyTitle: "Aucun serveur dans votre équipe pour l’instant.",
+      emptyLink: "Ajouter des membres",
+      admins: "{n} administrateur(s) voient déjà tous les événements.",
+    },
     listTag: "Événements",
     listTitle: "Vos événements actifs",
     listSubtitle:
@@ -344,6 +355,7 @@ const fr = {
     archiving: "Archivage…",
     tabs: {
       infos: "Informations",
+      team: "Équipe",
       consignes: "Tâches",
       menu: "Menu",
       accessories: "Accessoires",

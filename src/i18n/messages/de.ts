@@ -304,6 +304,17 @@ const de = {
     pageEmpty: "Keine ausstehenden Aufgaben.",
   },
   events: {
+    team: {
+      title: "Wer arbeitet bei diesem Event?",
+      hint: "Tippen Sie auf eine Bedienung, um sie hinzuzufügen oder zu entfernen. Sie sieht das Event sofort.",
+      count: "{n} Bedienung(en)",
+      added: "Bedienung zum Event hinzugefügt",
+      removed: "Bedienung vom Event entfernt",
+      error: "Speichern nicht möglich, bitte erneut versuchen.",
+      emptyTitle: "Noch keine Bedienung in Ihrem Team.",
+      emptyLink: "Mitglieder hinzufügen",
+      admins: "{n} Administrator(en) sehen bereits alle Events.",
+    },
     listTag: "Events",
     listTitle: "Ihre aktiven Events",
     listSubtitle: "Erstellen Sie ein Event für einen Gäste-QR, die Speisekarte und Live-Anfragen.",
@@ -332,6 +343,7 @@ const de = {
     archiving: "Wird archiviert…",
     tabs: {
       infos: "Informationen",
+      team: "Team",
       consignes: "Aufgaben",
       menu: "Menü",
       accessories: "Zubehör",

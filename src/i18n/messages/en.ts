@@ -310,6 +310,17 @@ const en = {
     pageEmpty: "No pending tasks.",
   },
   events: {
+    team: {
+      title: "Who works on this event?",
+      hint: "Tap a waiter to add or remove them. They see the event right away.",
+      count: "{n} waiter(s)",
+      added: "Waiter added to the event",
+      removed: "Waiter removed from the event",
+      error: "Could not save, please try again.",
+      emptyTitle: "No waiter in your team yet.",
+      emptyLink: "Add members",
+      admins: "{n} administrator(s) already see every event.",
+    },
     listTag: "Events",
     listTitle: "Your active events",
     listSubtitle:
@@ -342,6 +353,7 @@ const en = {
     archiving: "Archiving…",
     tabs: {
       infos: "Details",
+      team: "Team",
       consignes: "Tasks",
       menu: "Menu",
       accessories: "Accessories",
