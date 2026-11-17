@@ -540,6 +540,8 @@ const de = {
     staffMessage: "Einsatz an Tisch {table} angefordert.",
     eventEnded: "Event beendet",
     eventEndedHint: "Diese Seite ist für Gäste nicht mehr verfügbar.",
+    notFound: "Ungültiger Link",
+    notFoundHint: "Dieser QR-Code gehört zu keinem Event. Bitte wenden Sie sich an das Personal.",
   },
   instructionEditor: {
     addText: "Textblock",

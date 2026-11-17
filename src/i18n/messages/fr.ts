@@ -564,6 +564,8 @@ const fr = {
     staffMessage: "Intervention demandée à la table {table}.",
     eventEnded: "Événement terminé",
     eventEndedHint: "Cette page n’est plus disponible pour les invités.",
+    notFound: "Lien invalide",
+    notFoundHint: "Ce QR code ne correspond à aucun événement. Demandez de l’aide au personnel en salle.",
   },
   instructionEditor: {
     addText: "Bloc texte",

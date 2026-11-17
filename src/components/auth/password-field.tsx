@@ -15,7 +15,6 @@ export function PasswordField() {
         type={visible ? "text" : "password"}
         autoComplete="current-password"
         required
-        placeholder="••••••••"
         className="pr-11"
       />
       <button

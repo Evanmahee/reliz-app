@@ -559,6 +559,8 @@ const en = {
     staffMessage: "Staff requested at table {table}.",
     eventEnded: "Event ended",
     eventEndedHint: "This page is no longer available for guests.",
+    notFound: "Invalid link",
+    notFoundHint: "This QR code does not match any event. Please ask the staff for help.",
   },
   instructionEditor: {
     addText: "Text block",

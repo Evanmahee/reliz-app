@@ -540,6 +540,8 @@ const es = {
     staffMessage: "Intervención solicitada en la mesa {table}.",
     eventEnded: "Evento terminado",
     eventEndedHint: "Esta página ya no está disponible para los invitados.",
+    notFound: "Enlace no válido",
+    notFoundHint: "Este código QR no corresponde a ningún evento. Pide ayuda al personal.",
   },
   instructionEditor: {
     addText: "Bloque de texto",
