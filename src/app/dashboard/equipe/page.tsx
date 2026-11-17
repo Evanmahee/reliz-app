@@ -30,8 +30,8 @@ export default async function EquipePage({
     }),
     prisma.event.findMany({
       where: { ownerId: user.id, status: "LIVE" },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
+      orderBy: [{ startsAt: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, venue: true, startsAt: true },
     }),
   ]);
 
@@ -69,7 +69,12 @@ export default async function EquipePage({
           suspended: suspended.has(s.id),
           pending: pending.has(s.id),
         }))}
-        events={events}
+        events={events.map((e) => ({
+          id: e.id,
+          name: e.name,
+          venue: e.venue,
+          startsAt: e.startsAt?.toISOString() ?? null,
+        }))}
         createAction={createStaffMemberAction}
         deleteAction={deleteStaffMemberAction}
         inviteByEmail={mailerConfigured()}

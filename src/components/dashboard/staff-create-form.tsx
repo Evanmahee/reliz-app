@@ -12,6 +12,7 @@ import {
   MdOutlineVisibilityOff,
 } from "react-icons/md";
 import { Button } from "@/components/ui/button";
+import { EventMultiSelect, type EventOption } from "@/components/dashboard/event-multi-select";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { wrapFormActionWithToast } from "@/components/ui/form-action-toast";
@@ -52,7 +53,7 @@ export function StaffCreateForm({
   onCancel,
   inviteByEmail,
 }: {
-  events: { id: string; name: string }[];
+  events: EventOption[];
   createAction: (formData: FormData) => Promise<void>;
   onCancel: () => void;
   inviteByEmail: boolean;
@@ -194,16 +195,8 @@ export function StaffCreateForm({
             <legend className="sr-only">{t("equipe.eventsAccess")}</legend>
             <p className="text-sm font-medium text-zinc-800">{t("equipe.eventsAccess")}</p>
             <p className="mt-0.5 text-xs text-zinc-500">{t("equipe.eventsAccessHint")}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {events.map((ev) => (
-                <label
-                  key={ev.id}
-                  className="flex cursor-pointer items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-800 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50"
-                >
-                  <input type="checkbox" name="eventIds" value={ev.id} className="accent-brand-600" />
-                  {ev.name}
-                </label>
-              ))}
+            <div className="mt-3">
+              <EventMultiSelect events={events} />
             </div>
           </fieldset>
         ) : (

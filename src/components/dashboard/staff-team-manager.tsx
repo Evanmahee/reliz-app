@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { StaffCreateForm } from "@/components/dashboard/staff-create-form";
+import { EventMultiSelect, type EventOption } from "@/components/dashboard/event-multi-select";
 import {
   resendStaffInviteAction,
   resetStaffPasswordAction,
@@ -36,7 +37,7 @@ export function StaffTeamManager({
   inviteByEmail,
 }: {
   staff: StaffRow[];
-  events: { id: string; name: string }[];
+  events: EventOption[];
   createAction: (formData: FormData) => Promise<void>;
   deleteAction: (formData: FormData) => Promise<void>;
   inviteByEmail: boolean;
@@ -229,21 +230,7 @@ export function StaffTeamManager({
                       {t("equipe.eventsAccess")}
                     </p>
                     <p className="text-xs text-zinc-500">{t("equipe.eventsAccessHint")}</p>
-                    {events.map((ev) => (
-                      <label
-                        key={ev.id}
-                        className="flex items-center gap-2 text-sm text-zinc-700"
-                      >
-                        <input
-                          type="checkbox"
-                          name="eventIds"
-                          value={ev.id}
-                          defaultChecked={s.eventIds.includes(ev.id)}
-                          className="rounded"
-                        />
-                        {ev.name}
-                      </label>
-                    ))}
+                    <EventMultiSelect events={events} defaultSelected={s.eventIds} />
                     <SubmitButton
                       variant="outline"
                       className="text-xs"
