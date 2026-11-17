@@ -119,6 +119,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // Espace équipe : jamais affiché dans une iframe (anti-clickjacking).
+        // La page invité /e/… reste intégrable (ex. site vitrine).
+        source: "/(dashboard|connexion)(.*)",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+        ],
+      },
     ];
   },
   experimental: {
