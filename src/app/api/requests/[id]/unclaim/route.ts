@@ -37,6 +37,13 @@ export async function PATCH(
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
 
+  if (request.status === GUEST_REQUEST_STATUS.DONE) {
+    return NextResponse.json(
+      { error: "Demande déjà traitée" },
+      { status: 409 },
+    );
+  }
+
   const row = await prisma.guestRequest.update({
     where: { id },
     data: {
