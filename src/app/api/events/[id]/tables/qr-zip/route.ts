@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { getAppBaseUrl } from "@/lib/app-url";
 import QRCode from "qrcode";
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/auth";
@@ -62,9 +63,7 @@ export async function GET(
   };
   const pngWidth = qrPixelSize(size, 96);
 
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-    "http://localhost:3000";
+  const base = await getAppBaseUrl();
 
   const zip = new JSZip();
   for (const table of tables) {

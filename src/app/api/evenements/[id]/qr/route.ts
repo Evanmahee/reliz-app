@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { getSessionUserId } from "@/lib/auth";
 import {
   assertEventAccess,
@@ -32,8 +33,7 @@ export async function GET(
   if (!event) {
     return new Response("Introuvable", { status: 404 });
   }
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+  const base = await getAppBaseUrl();
   const url = `${base}/e/${event.publicSlug}`;
   const png = await QRCode.toBuffer(url, {
     type: "png",

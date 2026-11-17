@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth";
 import { EVENT_STATUS, USER_ROLE } from "@/lib/constants";
@@ -77,9 +78,7 @@ export default async function EventDetailPage({
       }
     : null;
   const archived = event.status === EVENT_STATUS.ARCHIVED;
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-    "http://localhost:3000";
+  const base = await getAppBaseUrl();
   const guestUrl = `${base}/e/${event.publicSlug}`;
 
   const instructionBlocks = parseInstructionsBlocks(
