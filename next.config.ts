@@ -98,6 +98,28 @@ function buildServerActionAllowedOrigins(): string[] {
   return [...origins];
 }
 
+/**
+ * Content-Security-Policy : l'app ne charge rien d'extérieur (polices
+ * auto-hébergées, aucune API tierce côté navigateur). 'unsafe-inline' reste
+ * nécessaire aux scripts d'hydratation de Next.js.
+ */
+function buildCsp(frameAncestors: string): string {
+  const dev = process.env.NODE_ENV === "development";
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    `connect-src 'self'${dev ? " ws: wss:" : ""}`,
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    `frame-ancestors ${frameAncestors}`,
+    ...(dev ? [] : ["upgrade-insecure-requests"]),
+  ].join("; ");
+}
+
 const nextConfig: NextConfig = {
   /** Hot reload / assets dev depuis un hostname type traiteur.local */
   allowedDevOrigins: ["*.local"],
@@ -111,22 +133,42 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains",
+            value: "max-age=63072000; includeSubDomains; preload",
           },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            value:
+              "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+          },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+        ],
+      },
+      {
+        // Tout sauf la page invité : jamais dans une iframe (anti-clickjacking).
+        source: "/((?!e/).*)",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: buildCsp("'none'") },
+        ],
+      },
+      {
+        // Page invité : intégrable uniquement par le site Reliz.
+        source: "/e/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: buildCsp(
+              "'self' https://reliz-rapisarda.com https://*.reliz-rapisarda.com https://reliz-site.vercel.app",
+            ),
           },
         ],
       },
       {
-        // Espace équipe : jamais affiché dans une iframe (anti-clickjacking).
-        // La page invité /e/… reste intégrable (ex. site vitrine).
-        source: "/(dashboard|connexion)(.*)",
-        headers: [
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
-        ],
+        // Données privées : jamais en cache (navigateur, proxy, CDN).
+        source: "/(api|dashboard)/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
       },
     ];
   },
