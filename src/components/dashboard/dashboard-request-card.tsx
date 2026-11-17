@@ -17,8 +17,8 @@ const TYPE_STYLES: Record<
   { bg: string; text: string; icon: string }
 > = {
   [GUEST_REQUEST.PRODUCT]: {
-    bg: "bg-violet-100",
-    text: "text-violet-900",
+    bg: "bg-brand-100",
+    text: "text-brand-900",
     icon: "restaurant",
   },
   [GUEST_REQUEST.SERVICE]: {
@@ -175,7 +175,7 @@ export function DashboardRequestCard({
                     ? "bg-red-50 text-red-800"
                     : claimedByOther
                       ? "bg-zinc-200 text-zinc-600"
-                      : "bg-violet-50 text-violet-900"
+                      : "bg-brand-50 text-brand-900"
                 }`}
               >
                 {claimedByLabel.replace("{name}", claimedByName)}

@@ -65,7 +65,7 @@ export function ConsignesReadOnly({
             <span className={b.checked ? "text-zinc-500 line-through" : ""}>
               {b.label.trim() || t("instructionEditor.untitled")}
               {staffName(b.assignedToId, staffById) ? (
-                <span className="ml-2 text-xs font-medium text-violet-700">
+                <span className="ml-2 text-xs font-medium text-brand-700">
                   → {staffName(b.assignedToId, staffById)}
                 </span>
               ) : null}

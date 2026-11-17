@@ -1,9 +1,11 @@
 "use client";
 
+import { MdOutlineWarningAmber } from "react-icons/md";
+
 import { useId, useState } from "react";
 import { useT } from "@/i18n/i18n-provider";
 
-/** Badge ⚠️ allergies avec détail au survol / focus / tap. */
+/** Badge allergies avec détail au survol / focus / tap. */
 export function AllergyWarningBadge({
   content,
   compact = false,
@@ -36,7 +38,7 @@ export function AllergyWarningBadge({
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
       >
-        <span aria-hidden>⚠️</span>
+        <MdOutlineWarningAmber aria-hidden className="h-3.5 w-3.5" />
         <span>{t("events.allergies.badge")}</span>
       </button>
       {open ? (

@@ -205,7 +205,7 @@ export function InstructionBlocksEditor({
                   ? `${t("instructionEditor.textBlock")} ${index + 1}`
                   : `${t("instructionEditor.taskBlock")} ${index + 1}`}
                 {b.type === "checkbox" && b.assignedToId ? (
-                  <span className="ml-1.5 font-normal normal-case text-violet-700">
+                  <span className="ml-1.5 font-normal normal-case text-brand-700">
                     ·{" "}
                     {staffById.get(b.assignedToId)
                       ? staffLabel(staffById.get(b.assignedToId)!)
@@ -281,7 +281,7 @@ export function InstructionBlocksEditor({
                       {t("instructionEditor.noStaffForAssign")}{" "}
                       <Link
                         href="/dashboard/equipe"
-                        className="font-medium text-violet-700 underline underline-offset-2"
+                        className="font-medium text-brand-700 underline underline-offset-2"
                       >
                         {t("instructionEditor.manageTeam")}
                       </Link>

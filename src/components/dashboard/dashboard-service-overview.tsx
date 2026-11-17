@@ -28,7 +28,7 @@ export function DashboardServiceOverview({
       key: GUEST_REQUEST.PRODUCT,
       count: productCount,
       label: labels.orders,
-      className: "bg-violet-50 text-violet-900",
+      className: "bg-brand-50 text-brand-900",
     },
     {
       key: GUEST_REQUEST.SERVICE,

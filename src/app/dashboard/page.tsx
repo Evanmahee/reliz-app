@@ -308,7 +308,7 @@ export default async function DashboardHomePage() {
             <h2 className="text-sm font-semibold text-zinc-900">
               {t("dashboard.tasksSection")}
             </h2>
-            <span className="rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-medium text-violet-900">
+            <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-900">
               {pendingTasks.length} {t("dashboard.tasksToDo")}
             </span>
           </div>

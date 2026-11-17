@@ -96,7 +96,7 @@ export function RequestClaimControls({
           className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
             lockedByOther
               ? "bg-zinc-200 text-zinc-600"
-              : "bg-violet-50 text-violet-900"
+              : "bg-brand-50 text-brand-900"
           }`}
         >
           {t("events.requests.claimedBy").replace("{name}", claimedName)}

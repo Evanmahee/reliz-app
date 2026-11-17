@@ -96,7 +96,7 @@ export default async function TachesPage() {
         <p className="text-center text-sm text-zinc-500">
           <Link
             href="/dashboard/checklists"
-            className="font-medium text-violet-700 hover:underline"
+            className="font-medium text-brand-700 hover:underline"
           >
             {t("checklists.manageTemplates")}
           </Link>

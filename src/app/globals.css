@@ -12,6 +12,22 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Palette Reliz : cuivre / braise (même univers que la page de connexion). */
+@theme {
+  --color-brand-50: #fbf4ef;
+  --color-brand-100: #f5e3d7;
+  --color-brand-200: #ecc6ad;
+  --color-brand-300: #df9f78;
+  --color-brand-400: #d27a48;
+  --color-brand-500: #c45c26;
+  --color-brand-600: #a94a1c;
+  --color-brand-700: #873a17;
+  --color-brand-800: #5e2a13;
+  --color-brand-900: #2a1810;
+  --color-brand-950: #120c0a;
+  --color-cream: #f7f2ec;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -19,12 +35,12 @@ body {
 
 /* Material Design 3 — Navigation bar (mobile) */
 :root {
-  --md3-surface: #fef7ff;
+  --md3-surface: #fffbf8;
   --md3-on-surface: #1d1b20;
   --md3-on-surface-variant: #49454f;
-  --md3-secondary-container: #e8def8;
-  --md3-on-secondary-container: #1d192b;
-  --md3-outline-variant: #cac4d0;
+  --md3-secondary-container: #f5e3d7;
+  --md3-on-secondary-container: #2a1810;
+  --md3-outline-variant: #e6dbd2;
   --md3-ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 

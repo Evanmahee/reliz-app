@@ -67,13 +67,13 @@ export function DashboardTaskCard({
         className={`flex items-center gap-3 px-4 py-4 transition-colors sm:gap-4 ${checked ? "bg-zinc-50/80" : "bg-white hover:bg-zinc-50"}`}
       >
         <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${checked ? "bg-zinc-100" : "bg-violet-100"}`}
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${checked ? "bg-zinc-100" : "bg-brand-100"}`}
         >
           <MaterialSymbol
             name="assignment"
             filled
             size={22}
-            className={checked ? "text-zinc-500" : "text-violet-900"}
+            className={checked ? "text-zinc-500" : "text-brand-900"}
           />
         </div>
 
@@ -98,7 +98,7 @@ export function DashboardTaskCard({
           className={`hidden shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium sm:inline ${
             checked
               ? "bg-emerald-50 text-emerald-800"
-              : "bg-violet-50 text-violet-900"
+              : "bg-brand-50 text-brand-900"
           }`}
         >
           {checked ? resolvedDoneLabel : pendingLabel}
