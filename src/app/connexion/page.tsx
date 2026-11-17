@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { loginAction } from "@/app/actions/auth";
 import { ConnexionErrorBanner } from "@/components/auth/connexion-error-banner";
@@ -83,6 +84,12 @@ export default async function ConnexionPage({
                 {t("connexion.password")}
               </label>
               <PasswordField />
+              <Link
+                href="/mot-de-passe-oublie"
+                className="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline"
+              >
+                {t("connexion.forgotPassword")}
+              </Link>
             </div>
 
             <Button type="submit" className="mt-2 w-full">
