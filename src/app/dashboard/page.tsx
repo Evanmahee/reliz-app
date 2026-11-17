@@ -78,7 +78,7 @@ export default async function DashboardHomePage() {
   const count = events.length;
 
   let recentRequests: RecentGuestRequest[];
-  let allergiesByKey: Record<string, string> = {};
+  const allergiesByKey: Record<string, string> = {};
   try {
     recentRequests =
       count > 0
