@@ -160,7 +160,9 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value: buildCsp(
-              "'self' https://reliz-rapisarda.com https://*.reliz-rapisarda.com https://reliz-site.vercel.app",
+              "'self' https://reliz-rapisarda.com https://*.reliz-rapisarda.com https://reliz-site.vercel.app" +
+                // En développement seulement : aperçu local du site (jamais en production).
+                (process.env.NODE_ENV === "development" ? " http://localhost:*" : ""),
             ),
           },
         ],
