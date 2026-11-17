@@ -23,12 +23,43 @@ export function getOwnerId(user: SessionUser): string {
 /** Profil User — une seule requête Prisma par userId et par navigation RSC. */
 export const getSessionUser = cache(
   async (userId: string): Promise<SessionUser | null> => {
-    return prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, role: true, employerId: true, email: true, name: true },
-    });
+    const [profile, suspended] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, role: true, employerId: true, email: true, name: true },
+      }),
+      isSuspended(userId),
+    ]);
+    // Compte suspendu par le traiteur : session ignorée immédiatement,
+    // même si le jeton de connexion n'a pas encore expiré.
+    return suspended ? null : profile;
   },
 );
+
+/** Accès suspendu (banned_until dans Supabase Auth) ? */
+async function isSuspended(userId: string): Promise<boolean> {
+  try {
+    const rows = await prisma.$queryRaw<{ banned: boolean }[]>`
+      select coalesce(banned_until > now(), false) as banned
+      from auth.users where id::text = ${userId}`;
+    return rows[0]?.banned ?? false;
+  } catch {
+    return false;
+  }
+}
+
+/** Membres suspendus parmi une liste d'identifiants. */
+export async function suspendedUserIds(ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  try {
+    const rows = await prisma.$queryRaw<{ id: string }[]>`
+      select id::text as id from auth.users
+      where id::text = any(${ids}) and banned_until > now()`;
+    return new Set(rows.map((r) => r.id));
+  } catch {
+    return new Set();
+  }
+}
 
 /** Événement appartenant au traiteur ou accessible au serveur / MH. */
 export async function assertEventAccess(

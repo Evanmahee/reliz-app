@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createStaffMemberAction, deleteStaffMemberAction } from "@/app/actions/staff";
 import { getSessionUserId } from "@/lib/auth";
-import { getSessionUser, isOwner } from "@/lib/event-access";
+import { getSessionUser, isOwner, suspendedUserIds } from "@/lib/event-access";
 import { USER_ROLE } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { StaffTeamManager } from "@/components/dashboard/staff-team-manager";
@@ -35,6 +35,7 @@ export default async function EquipePage({
   ]);
 
   const sp = await searchParams;
+  const suspended = await suspendedUserIds(staff.map((s) => s.id));
 
   return (
     <div className="w-full space-y-6">
@@ -45,7 +46,7 @@ export default async function EquipePage({
         <p className="text-sm text-red-600">{t("equipe.errEmail")}</p>
       ) : null}
       {sp.erreur === "motdepasse" ? (
-        <p className="text-sm text-red-600">{t("connexion.errFaible")} {t("connexion.newTooShort")}</p>
+        <p className="text-sm text-red-600">{t("equipe.errPw")}</p>
       ) : null}
       {sp.erreur === "champs" ? (
         <p className="text-sm text-red-600">{t("equipe.errFields")}</p>
@@ -58,6 +59,7 @@ export default async function EquipePage({
           email: s.email,
           role: s.role,
           eventIds: s.staffEventAccess.map((a) => a.eventId),
+          suspended: suspended.has(s.id),
         }))}
         events={events}
         createAction={createStaffMemberAction}

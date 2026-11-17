@@ -238,3 +238,46 @@ export async function deleteStaffTaskAction(formData: FormData) {
   revalidatePath(`/dashboard/evenements/${eventId}`);
   revalidatePath("/dashboard/taches");
 }
+
+/** Membre de l'équipe du traiteur connecté (ou null). */
+async function ownStaffMember(ownerId: string, staffId: string) {
+  if (!staffId) return null;
+  return prisma.user.findFirst({
+    where: { id: staffId, employerId: ownerId, role: { in: [...TEAM_ROLES] } },
+    select: { id: true, email: true },
+  });
+}
+
+/**
+ * Suspend ou rétablit l'accès d'un membre sans supprimer son compte.
+ * Suspendu = connexion refusée par Supabase et session ignorée par l'app.
+ */
+export async function setStaffSuspendedAction(formData: FormData) {
+  const user = await requireSessionUser();
+  if (!isOwner(user)) throw new Error("Réservé au traiteur");
+  const member = await ownStaffMember(user.id, field(formData, "staffId"));
+  if (!member) throw new Error("Membre introuvable");
+  const suspend = field(formData, "suspend") === "1";
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.auth.admin.updateUserById(member.id, {
+    ban_duration: suspend ? "876000h" : "none",
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard/equipe");
+}
+
+/** Le traiteur fixe un nouveau mot de passe pour un membre (oubli, départ…). */
+export async function resetStaffPasswordAction(formData: FormData) {
+  const user = await requireSessionUser();
+  if (!isOwner(user)) throw new Error("Réservé au traiteur");
+  const member = await ownStaffMember(user.id, field(formData, "staffId"));
+  if (!member) throw new Error("Membre introuvable");
+  const password = String(formData.get("password") ?? "");
+  if (checkPassword(password, member.email)) {
+    throw new Error("Mot de passe refusé");
+  }
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.auth.admin.updateUserById(member.id, { password });
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard/equipe");
+}

@@ -32,7 +32,7 @@ const es = {
   },
   roles: {
     OWNER: "Propietario",
-    MAITRE_HOTEL: "Maître",
+    MAITRE_HOTEL: "Administrador",
     STAFF: "Camarero",
   },
   common: {
@@ -167,8 +167,7 @@ const es = {
   equipe: {
     tag: "Equipo",
     title: "Equipo",
-    subtitle:
-      "Crea cuentas para tu equipo (camareros o maître) y asigna los camareros a los eventos.",
+    subtitle: "Cree las cuentas de sus colaboradores: nombre, correo, rol y contraseña. Puede suspender o eliminar un acceso en cualquier momento.",
     addTitle: "Nueva cuenta",
     addMember: "Añadir un miembro",
     cancel: "Cancelar",
@@ -178,10 +177,9 @@ const es = {
     emailPh: "Correo de acceso",
     passwordPh: "Contraseña (mín. 10 caracteres)",
     roleLabel: "Rol",
-    eventsAccess: "Eventos accesibles",
-    maitreAccessHint:
-      "El maître tiene acceso a todos los eventos del establecimiento.",
-    noLiveEvents: "Crea un evento en curso para poder asignarlo.",
+    eventsAccess: "¿En qué eventos trabaja este camarero?",
+    maitreAccessHint: "Un administrador ve todos los eventos y gestiona el servicio (mesas, menú, solicitudes). Solo usted gestiona el equipo.",
+    noLiveEvents: "Aún no hay eventos en curso: podrá dar acceso en cuanto se cree uno.",
     create: "Crear la cuenta",
     creating: "Creando…",
     empty: "Ningún miembro por el momento.",
@@ -194,6 +192,19 @@ const es = {
     toastCreated: "Cuenta de equipo creada",
     toastAccess: "Accesos actualizados",
     toastRole: "Rol actualizado",
+    roleHint: "Camarero: recibe y atiende las solicitudes de las mesas. Administrador: también gestiona los eventos.",
+    suspend: "Suspender el acceso",
+    reactivate: "Restablecer el acceso",
+    suspended: "Acceso suspendido",
+    toastSuspended: "Acceso suspendido: la persona ya no puede conectarse.",
+    toastReactivated: "Acceso restablecido.",
+    resetPwLabel: "Nueva contraseña para este miembro",
+    resetPwSave: "Cambiar la contraseña",
+    toastPw: "Contraseña cambiada.",
+    errPw: "Contraseña rechazada: mínimo 10 caracteres, con letras y cifras.",
+    removeConfirm: "¿Eliminar definitivamente esta cuenta? La persona perderá todo acceso.",
+    removeLabel: "Eliminar la cuenta",
+    eventsAccessHint: "Un camarero solo ve los eventos marcados aquí. Podrá cambiarlo más tarde.",
   },
   shopping: {
     tag: "Compras",

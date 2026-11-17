@@ -33,7 +33,7 @@ const fr = {
   },
   roles: {
     OWNER: "Propriétaire",
-    MAITRE_HOTEL: "Maître d’hôtel",
+    MAITRE_HOTEL: "Administrateur",
     STAFF: "Serveur",
   },
   common: {
@@ -175,8 +175,7 @@ const fr = {
   equipe: {
     tag: "Équipe",
     title: "Équipe",
-    subtitle:
-      "Créez des comptes pour votre équipe (serveurs ou maître d’hôtel) et assignez les serveurs aux événements.",
+    subtitle: "Créez les comptes de vos collaborateurs : nom, email, rôle et mot de passe. Vous pouvez suspendre ou supprimer un accès à tout moment.",
     addTitle: "Nouveau compte",
     addMember: "Ajouter un membre",
     cancel: "Annuler",
@@ -186,10 +185,9 @@ const fr = {
     emailPh: "Email de connexion",
     passwordPh: "Mot de passe (10 caractères min., lettres et chiffres)",
     roleLabel: "Rôle",
-    eventsAccess: "Événements accessibles",
-    maitreAccessHint:
-      "Le maître d’hôtel a accès à tous les événements de l’établissement.",
-    noLiveEvents: "Créez un événement en cours pour pouvoir l’assigner.",
+    eventsAccess: "Sur quels événements ce serveur travaille-t-il ?",
+    maitreAccessHint: "Un administrateur voit tous les événements et gère le service (tables, menu, demandes). Seul vous gérez l’équipe.",
+    noLiveEvents: "Aucun événement en cours pour l’instant : vous pourrez donner l’accès à un événement dès qu’il sera créé.",
     create: "Créer le compte",
     creating: "Création…",
     empty: "Aucun membre pour le moment.",
@@ -202,6 +200,19 @@ const fr = {
     toastCreated: "Compte équipe créé",
     toastAccess: "Accès mis à jour",
     toastRole: "Rôle mis à jour",
+    roleHint: "Serveur : reçoit et traite les demandes des tables. Administrateur : gère aussi les événements.",
+    suspend: "Suspendre l’accès",
+    reactivate: "Rétablir l’accès",
+    suspended: "Accès suspendu",
+    toastSuspended: "Accès suspendu : la personne ne peut plus se connecter.",
+    toastReactivated: "Accès rétabli.",
+    resetPwLabel: "Nouveau mot de passe pour ce membre",
+    resetPwSave: "Changer le mot de passe",
+    toastPw: "Mot de passe changé.",
+    errPw: "Mot de passe refusé : 10 caractères minimum, avec lettres et chiffres.",
+    removeConfirm: "Supprimer définitivement ce compte ? La personne perdra tout accès.",
+    removeLabel: "Supprimer le compte",
+    eventsAccessHint: "Un serveur ne voit que les événements cochés ici. Vous pourrez changer ce choix plus tard.",
   },
   shopping: {
     tag: "Courses",

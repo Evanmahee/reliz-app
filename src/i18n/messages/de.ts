@@ -32,7 +32,7 @@ const de = {
   },
   roles: {
     OWNER: "Inhaber",
-    MAITRE_HOTEL: "Oberkellner",
+    MAITRE_HOTEL: "Administrator",
     STAFF: "Kellner",
   },
   common: {
@@ -167,8 +167,7 @@ const de = {
   equipe: {
     tag: "Team",
     title: "Team",
-    subtitle:
-      "Konten für Ihr Team anlegen (Kellner oder Oberkellner) und Kellner Events zuweisen.",
+    subtitle: "Legen Sie Konten für Ihr Team an: Name, E-Mail, Rolle und Passwort. Sie können einen Zugang jederzeit sperren oder löschen.",
     addTitle: "Neues Konto",
     addMember: "Mitglied hinzufügen",
     cancel: "Abbrechen",
@@ -178,10 +177,9 @@ const de = {
     emailPh: "Login-E-Mail",
     passwordPh: "Passwort (mind. 10 Zeichen)",
     roleLabel: "Rolle",
-    eventsAccess: "Zugängliche Events",
-    maitreAccessHint:
-      "Der Oberkellner hat Zugang zu allen Events des Betriebs.",
-    noLiveEvents: "Erstellen Sie ein laufendes Event, um es zuzuweisen.",
+    eventsAccess: "An welchen Events arbeitet diese Bedienung?",
+    maitreAccessHint: "Ein Administrator sieht alle Events und leitet den Service (Tische, Menü, Anfragen). Nur Sie verwalten das Team.",
+    noLiveEvents: "Noch kein laufendes Event: Sie können Zugang geben, sobald eines angelegt ist.",
     create: "Konto erstellen",
     creating: "Wird erstellt…",
     empty: "Noch keine Mitglieder.",
@@ -194,6 +192,19 @@ const de = {
     toastCreated: "Teamkonto erstellt",
     toastAccess: "Zugänge aktualisiert",
     toastRole: "Rolle aktualisiert",
+    roleHint: "Bedienung: erhält und bearbeitet Tischanfragen. Administrator: verwaltet auch die Events.",
+    suspend: "Zugang sperren",
+    reactivate: "Zugang wiederherstellen",
+    suspended: "Zugang gesperrt",
+    toastSuspended: "Zugang gesperrt: die Person kann sich nicht mehr anmelden.",
+    toastReactivated: "Zugang wiederhergestellt.",
+    resetPwLabel: "Neues Passwort für dieses Mitglied",
+    resetPwSave: "Passwort ändern",
+    toastPw: "Passwort geändert.",
+    errPw: "Passwort abgelehnt: mindestens 10 Zeichen, mit Buchstaben und Ziffern.",
+    removeConfirm: "Dieses Konto endgültig löschen? Die Person verliert jeden Zugang.",
+    removeLabel: "Konto löschen",
+    eventsAccessHint: "Eine Bedienung sieht nur die hier angehakten Events. Sie können das später ändern.",
   },
   shopping: {
     tag: "Einkauf",

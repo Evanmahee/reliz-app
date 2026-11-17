@@ -33,7 +33,7 @@ const en = {
   },
   roles: {
     OWNER: "Owner",
-    MAITRE_HOTEL: "Head Waiter",
+    MAITRE_HOTEL: "Administrator",
     STAFF: "Server",
   },
   common: {
@@ -173,8 +173,7 @@ const en = {
   equipe: {
     tag: "Team",
     title: "Team",
-    subtitle:
-      "Create accounts for your team (servers or head waiter) and assign servers to live events.",
+    subtitle: "Create accounts for your staff: name, email, role and password. You can suspend or delete access at any time.",
     addTitle: "New account",
     addMember: "Add member",
     cancel: "Cancel",
@@ -184,10 +183,9 @@ const en = {
     emailPh: "Login email",
     passwordPh: "Password (min. 10 characters)",
     roleLabel: "Role",
-    eventsAccess: "Accessible events",
-    maitreAccessHint:
-      "The head waiter has access to all venue events.",
-    noLiveEvents: "Create a live event to assign access.",
+    eventsAccess: "Which events does this waiter work on?",
+    maitreAccessHint: "An administrator sees every event and runs the service (tables, menu, requests). Only you manage the team.",
+    noLiveEvents: "No live event yet: you can grant access as soon as one is created.",
     create: "Create account",
     creating: "Creating…",
     empty: "No team members yet.",
@@ -200,6 +198,19 @@ const en = {
     toastCreated: "Team account created",
     toastAccess: "Access updated",
     toastRole: "Role updated",
+    roleHint: "Waiter: receives and handles table requests. Administrator: also manages events.",
+    suspend: "Suspend access",
+    reactivate: "Restore access",
+    suspended: "Access suspended",
+    toastSuspended: "Access suspended: this person can no longer sign in.",
+    toastReactivated: "Access restored.",
+    resetPwLabel: "New password for this member",
+    resetPwSave: "Change password",
+    toastPw: "Password changed.",
+    errPw: "Password refused: at least 10 characters, with letters and digits.",
+    removeConfirm: "Permanently delete this account? The person will lose all access.",
+    removeLabel: "Delete account",
+    eventsAccessHint: "A waiter only sees the events ticked here. You can change this later.",
   },
   shopping: {
     tag: "Shopping",

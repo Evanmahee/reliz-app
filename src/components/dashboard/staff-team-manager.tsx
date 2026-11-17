@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import {
+  resetStaffPasswordAction,
+  setStaffSuspendedAction,
   updateStaffEventsAction,
   updateStaffRoleAction,
 } from "@/app/actions/staff";
@@ -20,6 +22,7 @@ type StaffRow = {
   email: string;
   role: string;
   eventIds: string[];
+  suspended: boolean;
 };
 
 function StaffCreateForm({
@@ -68,13 +71,14 @@ function StaffCreateForm({
             {t("roles.MAITRE_HOTEL")}
           </option>
         </select>
+        <p className="mt-1.5 text-xs text-zinc-500">{t("equipe.roleHint")}</p>
       </div>
       {role === USER_ROLE.STAFF ? (
         events.length > 0 ? (
-          <fieldset className="space-y-2">
-            <legend className="text-xs font-medium text-zinc-500">
-              {t("equipe.eventsAccess")}
-            </legend>
+          <fieldset className="space-y-2 rounded-2xl bg-zinc-50 p-3">
+            <legend className="sr-only">{t("equipe.eventsAccess")}</legend>
+            <p className="text-sm font-medium text-zinc-800">{t("equipe.eventsAccess")}</p>
+            <p className="text-xs text-zinc-500">{t("equipe.eventsAccessHint")}</p>
             {events.map((ev) => (
               <label
                 key={ev.id}
@@ -180,20 +184,71 @@ export function StaffTeamManager({
                       <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600">
                         {roleLabel(s.role)}
                       </span>
+                      {s.suspended ? (
+                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700">
+                          {t("equipe.suspended")}
+                        </span>
+                      ) : null}
                     </div>
                     <p className="text-sm text-zinc-500">{s.email}</p>
                   </div>
-                  <form action={deleteAction}>
-                    <input type="hidden" name="staffId" value={s.id} />
-                    <SubmitButton
-                      variant="ghost"
-                      className="text-xs text-red-700"
-                      pendingLabel="…"
+                  <div className="flex flex-wrap gap-2">
+                    <form
+                      action={wrapFormActionWithToast(setStaffSuspendedAction, {
+                        success: s.suspended
+                          ? t("equipe.toastReactivated")
+                          : t("equipe.toastSuspended"),
+                      })}
                     >
-                      {t("equipe.remove")}
-                    </SubmitButton>
-                  </form>
+                      <input type="hidden" name="staffId" value={s.id} />
+                      <input type="hidden" name="suspend" value={s.suspended ? "0" : "1"} />
+                      <SubmitButton variant="outline" className="text-xs" pendingLabel="…">
+                        {s.suspended ? t("equipe.reactivate") : t("equipe.suspend")}
+                      </SubmitButton>
+                    </form>
+                    <form
+                      action={deleteAction}
+                      onSubmit={(e) => {
+                        if (!window.confirm(t("equipe.removeConfirm"))) e.preventDefault();
+                      }}
+                    >
+                      <input type="hidden" name="staffId" value={s.id} />
+                      <SubmitButton
+                        variant="ghost"
+                        className="text-xs text-red-700"
+                        pendingLabel="…"
+                      >
+                        {t("equipe.removeLabel")}
+                      </SubmitButton>
+                    </form>
+                  </div>
                 </div>
+
+                <form
+                  action={wrapFormActionWithToast(resetStaffPasswordAction, {
+                    success: t("equipe.toastPw"),
+                    error: t("equipe.errPw"),
+                  })}
+                  className="mt-3 flex flex-wrap items-end gap-2"
+                >
+                  <input type="hidden" name="staffId" value={s.id} />
+                  <div className="min-w-[12rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-zinc-500">
+                      {t("equipe.resetPwLabel")}
+                    </label>
+                    <Input
+                      name="password"
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={10}
+                      maxLength={72}
+                      required
+                    />
+                  </div>
+                  <SubmitButton variant="outline" className="text-xs" pendingLabel="…">
+                    {t("equipe.resetPwSave")}
+                  </SubmitButton>
+                </form>
 
                 <form
                   action={wrapFormActionWithToast(updateStaffRoleAction, {
@@ -234,9 +289,10 @@ export function StaffTeamManager({
                     className="mt-3 space-y-2 rounded-xl border border-zinc-100 bg-zinc-50/50 p-3"
                   >
                     <input type="hidden" name="staffId" value={s.id} />
-                    <p className="text-xs font-medium text-zinc-500">
+                    <p className="text-sm font-medium text-zinc-800">
                       {t("equipe.eventsAccess")}
                     </p>
+                    <p className="text-xs text-zinc-500">{t("equipe.eventsAccessHint")}</p>
                     {events.map((ev) => (
                       <label
                         key={ev.id}
