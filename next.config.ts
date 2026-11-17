@@ -147,15 +147,15 @@ const nextConfig: NextConfig = {
       },
       {
         // Tout sauf la page invité : jamais dans une iframe (anti-clickjacking).
-        source: "/((?!e/).*)",
+        source: "/((?!e/|demo/).*)",
         headers: [
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Content-Security-Policy", value: buildCsp("'none'") },
         ],
       },
       {
-        // Page invité : intégrable uniquement par le site Reliz.
-        source: "/e/:path*",
+        // Page invité et démo côté équipe : intégrables uniquement par le site Reliz.
+        source: "/(e|demo)/:path*",
         headers: [
           {
             key: "Content-Security-Policy",
