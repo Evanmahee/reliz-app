@@ -71,10 +71,16 @@ export async function createStaffMemberAction(formData: FormData) {
 
   // Accès événement uniquement pour STAFF (MH voit tous les events).
   if (role === USER_ROLE.STAFF && eventIds.length > 0) {
-    await prisma.staffEventAccess.createMany({
-      data: eventIds.map((eventId) => ({ userId: staff.id, eventId })),
-      skipDuplicates: true,
+    const owned = await prisma.event.findMany({
+      where: { ownerId: user.id, id: { in: eventIds } },
+      select: { id: true },
     });
+    if (owned.length > 0) {
+      await prisma.staffEventAccess.createMany({
+        data: owned.map((e) => ({ userId: staff.id, eventId: e.id })),
+        skipDuplicates: true,
+      });
+    }
   }
   revalidatePath("/dashboard/equipe");
   redirect("/dashboard/equipe?ok=1");
