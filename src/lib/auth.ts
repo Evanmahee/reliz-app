@@ -47,8 +47,12 @@ export async function ensureUserProfile(authUser: {
   if (!email) throw new Error("Email Auth manquant");
 
   const nameMeta = authUser.user_metadata?.name;
+  // Sans nom renseigné, on prend le début de l'email (sinon l'équipe voit
+  // « Pris en charge par Utilisateur » sans savoir qui).
   const name =
-    typeof nameMeta === "string" && nameMeta.trim() ? nameMeta.trim() : null;
+    typeof nameMeta === "string" && nameMeta.trim()
+      ? nameMeta.trim()
+      : email.split("@")[0] || null;
 
   const existing = await prisma.user.findUnique({
     where: { id: authUser.id },
