@@ -35,7 +35,7 @@ export default async function GuestEventPage({
 
   if (event.status !== EVENT_STATUS.LIVE) {
     return (
-      <div className="min-h-screen bg-zinc-100 px-4 py-8">
+      <div className="min-h-screen bg-cream px-4 py-8">
         <GuestTopBar returnTo={`/e/${slug}`} />
         <div className="mx-auto flex min-h-[50vh] max-w-lg items-center justify-center">
           <div className="w-full rounded-[1.75rem] border border-zinc-200 bg-white px-6 py-10 text-center">
@@ -48,7 +48,7 @@ export default async function GuestEventPage({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-100 px-4 py-8 pb-20">
+    <div className="min-h-screen bg-cream px-4 pt-4 pb-20">
       <GuestTopBar returnTo={`/e/${slug}`} />
       <div className="mx-auto max-w-lg">
         <GuestApp
