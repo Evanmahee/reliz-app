@@ -18,6 +18,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { getRequestUrgency } from "@/lib/request-urgency";
 import { EventLiveCard } from "@/components/dashboard/event-live-card";
+import { DashboardAutoRefresh } from "@/components/dashboard/dashboard-auto-refresh";
 import { DashboardRequestCard } from "@/components/dashboard/dashboard-request-card";
 import { DashboardTaskCard } from "@/components/dashboard/dashboard-task-card";
 import { DashboardServiceOverview } from "@/components/dashboard/dashboard-service-overview";
@@ -211,6 +212,8 @@ export default async function DashboardHomePage() {
         )}
       </div>
 
+      {count > 0 ? <DashboardAutoRefresh /> : null}
+
       {count > 0 && pendingNotif > 0 ? (
         <DashboardServiceOverview
           pendingTotal={pendingNotif}
@@ -262,7 +265,7 @@ export default async function DashboardHomePage() {
                   return (
                   <DashboardRequestCard
                     key={r.id}
-                    href={`/dashboard/evenements/${r.event.id}`}
+                    href={`/dashboard/evenements/${r.event.id}#demandes`}
                     createdAt={r.createdAt}
                     eventName={r.event.name}
                     venue={r.event.venue}
