@@ -1,21 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
-/** Affiche l’erreur une fois puis retire `?erreur=` de l’URL (évite le bandeau collé au refresh HMR). */
+/**
+ * Affiche l’erreur puis retire `?erreur=` de l’URL (évite le bandeau collé au refresh).
+ * On réécrit seulement l’URL du navigateur : un router.replace() rechargeait la
+ * page serveur sans le paramètre, et le message disparaissait avant d’être lu.
+ */
 export function ConnexionErrorBanner({ message }: { message: string }) {
-  const router = useRouter();
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    router.replace("/connexion", { scroll: false });
-  }, [router]);
+    window.history.replaceState(window.history.state, "", "/connexion");
+  }, []);
 
   if (!visible || !message) return null;
 
   return (
-    <p className="rounded-[1rem] bg-red-50 px-3 py-2 text-sm text-red-700">
+    <p
+      role="alert"
+      className="rounded-[1rem] bg-red-50 px-3 py-2 text-sm text-red-700"
+    >
       {message}
       <button
         type="button"
