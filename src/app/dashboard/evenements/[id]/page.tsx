@@ -112,6 +112,18 @@ export default async function EventDetailPage({
         ) : null}
       </div>
 
+      {!archived ? (
+        <>
+          <Card id="demandes" className="scroll-mt-20 px-5 py-6 sm:px-6">
+            <EventRequestsLive
+              eventId={event.id}
+              currentUserId={sessionUser.id}
+              currentUserRole={sessionUser.role}
+            />
+          </Card>
+        </>
+      ) : null}
+
       <EventDetailTabs
         eventId={event.id}
         archived={archived}
@@ -142,17 +154,6 @@ export default async function EventDetailPage({
         qrDownloadHref={`/api/evenements/${event.id}/qr`}
       />
 
-      {!archived ? (
-        <>
-          <Card className="px-5 py-6 sm:px-6">
-            <EventRequestsLive
-              eventId={event.id}
-              currentUserId={sessionUser.id}
-              currentUserRole={sessionUser.role}
-            />
-          </Card>
-        </>
-      ) : null}
     </div>
   );
 }

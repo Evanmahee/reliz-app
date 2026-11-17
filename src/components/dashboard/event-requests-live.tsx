@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { markRequestDoneFormAction } from "@/app/actions/events";
+import { toast } from "sonner";
+import { markRequestDoneAction } from "@/app/actions/events";
 import {
   AllergyWarningBadge,
   joinAllergyContents,
 } from "@/components/dashboard/allergy-warning-badge";
 import { RequestClaimControls } from "@/components/dashboard/request-claim-controls";
 import { Button } from "@/components/ui/button";
-import { wrapFormActionWithToast } from "@/components/ui/form-action-toast";
-import { SubmitButton } from "@/components/ui/submit-button";
 import { GUEST_REQUEST_STATUS, REQUEST_CATEGORY, USER_ROLE } from "@/lib/constants";
 import {
   normalizeRequestCategory,
@@ -54,6 +53,8 @@ export function EventRequestsLive({
   const [rows, setRows] = useState<Row[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  /** Demandes marquées traitées ici : masquées tout de suite (sans attendre le serveur). */
+  const [doneIds, setDoneIds] = useState<Set<string>>(() => new Set());
   const [zoneFilter, setZoneFilter] = useState<string>("all");
   const [knownZones, setKnownZones] = useState<string[]>([]);
   const [allergiesByTable, setAllergiesByTable] = useState<
@@ -169,7 +170,25 @@ export function EventRequestsLive({
     };
   }, [load]);
 
+  async function markDone(requestId: string) {
+    setDoneIds((prev) => new Set(prev).add(requestId));
+    try {
+      await markRequestDoneAction(requestId, eventId);
+      toast.success(t("events.requests.toastDone"));
+      void load();
+    } catch (e) {
+      console.error(e);
+      setDoneIds((prev) => {
+        const next = new Set(prev);
+        next.delete(requestId);
+        return next;
+      });
+      toast.error(t("events.requests.loadError"));
+    }
+  }
+
   const active = rows
+    .filter((r) => !doneIds.has(r.id))
     .filter(
       (r) =>
         r.status === GUEST_REQUEST_STATUS.PENDING ||
@@ -328,21 +347,14 @@ export function EventRequestsLive({
               {t("events.requests.locked")}
             </span>
           ) : (
-            <form
-              action={wrapFormActionWithToast(markRequestDoneFormAction, {
-                success: t("events.requests.toastDone"),
-              })}
+            <Button
+              type="button"
+              variant="outline"
+              className="text-xs"
+              onClick={() => void markDone(r.id)}
             >
-              <input type="hidden" name="requestId" value={r.id} />
-              <input type="hidden" name="eventId" value={eventId} />
-              <SubmitButton
-                variant="outline"
-                className="text-xs"
-                pendingLabel="…"
-              >
-                {t("events.requests.markDone")}
-              </SubmitButton>
-            </form>
+              {t("events.requests.markDone")}
+            </Button>
           )}
         </div>
       </li>
