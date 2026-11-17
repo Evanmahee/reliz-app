@@ -68,6 +68,7 @@ export function InstructionBlocksEditor({
 
   const serialized = JSON.stringify(initialBlocks);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resynchronise après revalidation serveur
     setBlocks(JSON.parse(serialized) as InstructionBlock[]);
   }, [serialized]);
 

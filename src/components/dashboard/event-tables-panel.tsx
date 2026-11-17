@@ -87,6 +87,7 @@ export function EventTablesPanel({
   }, [eventId, onTablesChange, t, loadAllergies]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- chargement initial depuis l’API
     void load();
   }, [load]);
 
