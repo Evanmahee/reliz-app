@@ -102,7 +102,7 @@ export function GuestApp({
       setQueuedCount(pendingGuestRequestCount(publicSlug));
       if (sent > 0) {
         setFeedback(t("guest.queuedSent"));
-        setTimeout(() => setFeedback(null), 2400);
+        setTimeout(() => setFeedback(null), 3500);
       }
     }
     void flush();
@@ -146,7 +146,7 @@ export function GuestApp({
 
   function flash(msg: string) {
     setFeedback(msg);
-    setTimeout(() => setFeedback(null), 2400);
+    setTimeout(() => setFeedback(null), 3500);
   }
 
   function categoryLabel(cat: RequestCategory) {
@@ -266,15 +266,17 @@ export function GuestApp({
   }
 
   const visibleMenu = menuItems.filter((m) => !m.hidden);
+  // Carte vide = onglet inutile : on ouvre directement « Services ».
+  const showMenu = !menuHidden && visibleMenu.length > 0;
   const tabs: { id: Tab; label: string }[] = [
-    ...(!menuHidden
+    ...(showMenu
       ? [{ id: "carte" as Tab, label: t("guest.tabMenu") }]
       : []),
     { id: "services", label: t("guest.tabService") },
     { id: "personnel", label: t("guest.tabStaff") },
   ];
   const activeTab =
-    tab === "carte" && (menuHidden || tabs.every((x) => x.id !== "carte"))
+    tab === "carte" && !showMenu
       ? "services"
       : tab;
 
@@ -309,7 +311,14 @@ export function GuestApp({
           </Button>
         </div>
         {feedback ? (
-          <p className="mt-3 text-sm font-medium text-emerald-700">{feedback}</p>
+          // Bandeau fixe en bas : visible même quand l'invité a défilé jusqu'au bouton.
+          <p
+            role="status"
+            aria-live="polite"
+            className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 mx-auto max-w-lg rounded-2xl bg-emerald-600 px-4 py-3 text-center text-sm font-medium text-white shadow-lg"
+          >
+            {feedback}
+          </p>
         ) : null}
         {retrying ? (
           <p className="mt-3 text-sm font-medium text-amber-800">
