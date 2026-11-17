@@ -13,7 +13,7 @@ const fr = {
     de: "DE",
   },
   nav: {
-    dashboard: "Dashboard",
+    dashboard: "Tableau de bord",
     events: "Événements",
     tasks: "Tâches",
     shopping: "Courses",
@@ -115,7 +115,7 @@ const fr = {
     footer: "QR code, carte, demandes tables — tout depuis une seule interface.",
   },
   dashboard: {
-    tag: "Dashboard",
+    tag: "Tableau de bord",
     title: "Événements en cours",
     subtitle:
       "Ouvrez une fiche pour la carte, les consignes, le QR et les demandes des tables.",

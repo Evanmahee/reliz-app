@@ -22,6 +22,7 @@ import {
   MdOutlineRestaurantMenu,
   MdRoomService,
   MdOutlineRoomService,
+  MdPriorityHigh,
 } from "react-icons/md";
 
 type Props = {
@@ -44,6 +45,7 @@ const FILLED: Record<string, IconType> = {
   restaurant: MdRestaurantMenu,
   room_service: MdRoomService,
   notifications: MdNotifications,
+  priority_high: MdPriorityHigh,
 };
 
 const OUTLINE: Record<string, IconType> = {
@@ -59,6 +61,7 @@ const OUTLINE: Record<string, IconType> = {
   restaurant: MdOutlineRestaurantMenu,
   room_service: MdOutlineRoomService,
   notifications: MdOutlineNotifications,
+  priority_high: MdPriorityHigh,
 };
 
 export function MaterialSymbol({
