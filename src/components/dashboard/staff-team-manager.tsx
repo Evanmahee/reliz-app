@@ -49,7 +49,8 @@ function StaffCreateForm({
         name="password"
         type="password"
         placeholder={t("equipe.passwordPh")}
-        minLength={8}
+        minLength={10}
+        maxLength={72}
         required
       />
       <div>

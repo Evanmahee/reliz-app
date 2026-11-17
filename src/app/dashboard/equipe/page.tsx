@@ -44,6 +44,9 @@ export default async function EquipePage({
       {sp.erreur === "email" ? (
         <p className="text-sm text-red-600">{t("equipe.errEmail")}</p>
       ) : null}
+      {sp.erreur === "motdepasse" ? (
+        <p className="text-sm text-red-600">{t("connexion.errFaible")} {t("connexion.newTooShort")}</p>
+      ) : null}
       {sp.erreur === "champs" ? (
         <p className="text-sm text-red-600">{t("equipe.errFields")}</p>
       ) : null}

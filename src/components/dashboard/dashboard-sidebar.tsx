@@ -63,6 +63,12 @@ export function DashboardSidebar({
             {userName ?? t("user.defaultName")}
           </p>
           <p className="truncate text-xs text-zinc-500">{userEmail}</p>
+          <Link
+            href="/dashboard/compte"
+            className="mt-2 inline-block text-xs font-medium text-brand-700 hover:underline"
+          >
+            {t("connexion.accountTitle")}
+          </Link>
           <LocaleSwitcher returnTo={pathname} className="mt-3" />
         </div>
         <form action={logoutAction} className="mt-3">

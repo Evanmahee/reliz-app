@@ -15,14 +15,15 @@ export default async function NewPasswordPage({
   if (!(await getSessionUserId())) redirect("/mot-de-passe-oublie?erreur=lien");
   const { t } = await getT();
   const sp = await searchParams;
-  const msg =
-    sp.erreur === "court"
-      ? t("connexion.newTooShort")
-      : sp.erreur === "different"
-        ? t("connexion.newMismatch")
-        : sp.erreur === "echec"
-          ? t("connexion.newFailed")
-          : null;
+  const errors: Record<string, string> = {
+    court: t("connexion.newTooShort"),
+    long: t("connexion.errLong"),
+    faible: t("connexion.errFaible"),
+    email: t("connexion.errEmail"),
+    different: t("connexion.newMismatch"),
+    echec: t("connexion.newFailed"),
+  };
+  const msg = sp.erreur ? (errors[sp.erreur] ?? null) : null;
 
   return (
     <AuthCard title={t("connexion.newTitle")}>
@@ -36,13 +37,14 @@ export default async function NewPasswordPage({
           <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-zinc-700">
             {t("connexion.newPassword")}
           </label>
-          <Input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required />
+          <Input id="password" name="password" type="password" autoComplete="new-password" minLength={10} maxLength={72} required />
+          <p className="mt-1.5 text-xs text-zinc-500">{t("connexion.accountPwHint")}</p>
         </div>
         <div>
           <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium text-zinc-700">
             {t("connexion.newConfirm")}
           </label>
-          <Input id="confirm" name="confirm" type="password" autoComplete="new-password" minLength={8} required />
+          <Input id="confirm" name="confirm" type="password" autoComplete="new-password" minLength={10} maxLength={72} required />
         </div>
         <Button type="submit" className="w-full">
           {t("connexion.newSubmit")}

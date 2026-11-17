@@ -14,7 +14,7 @@ import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardTabBar } from "@/components/dashboard/dashboard-tab-bar";
 import { LocaleSwitcher } from "@/components/i18n/locale-switcher";
 import { getT } from "@/i18n/server";
-import { MdLogout } from "react-icons/md";
+import { MdLogout, MdOutlineAccountCircle } from "react-icons/md";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +59,14 @@ export default async function DashboardLayout({
           </Link>
           <div className="flex items-center gap-2">
             <LocaleSwitcher returnTo="/dashboard" variant="select" />
+            <Link
+              href="/dashboard/compte"
+              aria-label={t("connexion.accountTitle")}
+              title={t("connexion.accountTitle")}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[1.15rem] text-zinc-700 transition-colors hover:bg-zinc-100/80"
+            >
+              <MdOutlineAccountCircle size={22} aria-hidden />
+            </Link>
             <form action={logoutAction}>
               <button
                 type="submit"

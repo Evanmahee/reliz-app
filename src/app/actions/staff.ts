@@ -1,5 +1,8 @@
 "use server";
 
+import { field } from "@/lib/form-field";
+import { checkPassword } from "@/lib/password-policy";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { USER_ROLE, STAFF_TASK_STATUS } from "@/lib/constants";
@@ -24,16 +27,19 @@ function parseTeamRole(raw: string): (typeof TEAM_ROLES)[number] {
 export async function createStaffMemberAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) throw new Error("Réservé au traiteur");
-  const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const name = field(formData, "name");
+  const email = field(formData, "email").toLowerCase();
   const password = String(formData.get("password") ?? "");
   const role = parseTeamRole(String(formData.get("role") ?? ""));
   const eventIds = formData
     .getAll("eventIds")
     .map((v) => String(v).trim())
     .filter(Boolean);
-  if (!name || !email || password.length < 8) {
+  if (!name || !email) {
     redirect("/dashboard/equipe?erreur=champs");
+  }
+  if (checkPassword(password, email)) {
+    redirect("/dashboard/equipe?erreur=motdepasse");
   }
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) redirect("/dashboard/equipe?erreur=email");
@@ -90,7 +96,7 @@ export async function createStaffMemberAction(formData: FormData) {
 export async function deleteStaffMemberAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) return;
-  const staffId = String(formData.get("staffId") ?? "").trim();
+  const staffId = field(formData, "staffId");
   if (!staffId) return;
 
   await prisma.user.deleteMany({
@@ -114,7 +120,7 @@ export async function deleteStaffMemberAction(formData: FormData) {
 export async function updateStaffRoleAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) return;
-  const staffId = String(formData.get("staffId") ?? "").trim();
+  const staffId = field(formData, "staffId");
   const role = parseTeamRole(String(formData.get("role") ?? ""));
   if (!staffId) return;
 
@@ -142,7 +148,7 @@ export async function updateStaffRoleAction(formData: FormData) {
 export async function updateStaffEventsAction(formData: FormData) {
   const user = await requireSessionUser();
   if (!isOwner(user)) return;
-  const staffId = String(formData.get("staffId") ?? "").trim();
+  const staffId = field(formData, "staffId");
   const eventIds = formData
     .getAll("eventIds")
     .map((v) => String(v).trim())
@@ -168,11 +174,11 @@ export async function updateStaffEventsAction(formData: FormData) {
 
 export async function createStaffTaskAction(formData: FormData) {
   const user = await requireSessionUser();
-  const eventId = String(formData.get("eventId") ?? "").trim();
-  const title = String(formData.get("title") ?? "").trim();
-  const note = String(formData.get("note") ?? "").trim();
+  const eventId = field(formData, "eventId");
+  const title = field(formData, "title");
+  const note = field(formData, "note");
   const assignedToId =
-    String(formData.get("assignedToId") ?? "").trim() || null;
+    field(formData, "assignedToId") || null;
   if (!eventId || !title) return;
   if (!canManageEventOps(user)) return;
   await assertEventAccess(eventId, user);
@@ -203,8 +209,8 @@ export async function createStaffTaskAction(formData: FormData) {
 
 export async function toggleStaffTaskDoneAction(formData: FormData) {
   const user = await requireSessionUser();
-  const taskId = String(formData.get("taskId") ?? "").trim();
-  const eventId = String(formData.get("eventId") ?? "").trim();
+  const taskId = field(formData, "taskId");
+  const eventId = field(formData, "eventId");
   const done = String(formData.get("done") ?? "") === "true";
   if (!taskId || !eventId) return;
   await assertEventAccess(eventId, user);
@@ -223,8 +229,8 @@ export async function toggleStaffTaskDoneAction(formData: FormData) {
 
 export async function deleteStaffTaskAction(formData: FormData) {
   const user = await requireSessionUser();
-  const taskId = String(formData.get("taskId") ?? "").trim();
-  const eventId = String(formData.get("eventId") ?? "").trim();
+  const taskId = field(formData, "taskId");
+  const eventId = field(formData, "eventId");
   if (!taskId || !eventId) return;
   if (!canManageEventOps(user)) return;
   await assertEventAccess(eventId, user);
