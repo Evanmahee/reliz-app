@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId } from "react";
+import { createPortal } from "react-dom";
 import { MdClose } from "react-icons/md";
 
 export function Modal({
@@ -32,9 +33,11 @@ export function Modal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  // Rendu au niveau de <body> : une barre latérale (flou, position fixe…)
+  // ne peut plus décaler ni rogner la fenêtre.
+  return createPortal(
     <div className="fixed inset-0 z-[70] flex items-end justify-center p-4 sm:items-center">
       <button
         type="button"
@@ -63,6 +66,7 @@ export function Modal({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
