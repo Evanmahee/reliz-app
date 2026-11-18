@@ -611,6 +611,13 @@ const fr = {
     home: "Tableau de bord",
   },
   demo: {
+    inProgress: "Prise en charge",
+    claim: "Prendre en charge",
+    markDone: "Marquer traitée",
+    close: "Fermer",
+    sentAt: "Envoyée",
+    status: "Statut",
+    doneMessage: "Demande traitée : l’invité le voit sur son téléphone.",
     title: "Demandes invités",
     pending: "{n} en cours",
     live: "En direct",
@@ -624,6 +631,7 @@ const fr = {
     minutesAgo: "il y a {n} min",
   },
   guest: {
+    sending: "Envoi…",
     greeting: "Que peut-on faire pour vous ?",
     tableShort: "Table",
     actDrink: "Boisson",

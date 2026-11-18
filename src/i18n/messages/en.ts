@@ -607,6 +607,13 @@ const en = {
     home: "Dashboard",
   },
   demo: {
+    inProgress: "Handled",
+    claim: "Take it",
+    markDone: "Mark as done",
+    close: "Close",
+    sentAt: "Sent",
+    status: "Status",
+    doneMessage: "Request done: the guest sees it on their phone.",
     title: "Guest requests",
     pending: "{n} open",
     live: "Live",
@@ -620,6 +627,7 @@ const en = {
     minutesAgo: "{n} min ago",
   },
   guest: {
+    sending: "Sending…",
     greeting: "How can we help?",
     tableShort: "Table",
     actDrink: "Drink",

@@ -31,7 +31,7 @@ export async function GET(req: Request) {
       where: {
         eventId: event.id,
         status: { in: [GUEST_REQUEST_STATUS.PENDING, GUEST_REQUEST_STATUS.ESCALATED] },
-        createdAt: { lt: new Date(now - 12_000) },
+        createdAt: { lt: new Date(now - 45_000) },
       },
       data: { status: GUEST_REQUEST_STATUS.IN_PROGRESS, claimedAt: new Date(now) },
     }),
@@ -39,7 +39,7 @@ export async function GET(req: Request) {
       where: {
         eventId: event.id,
         status: GUEST_REQUEST_STATUS.IN_PROGRESS,
-        createdAt: { lt: new Date(now - 40_000) },
+        createdAt: { lt: new Date(now - 120_000) },
       },
       data: { status: GUEST_REQUEST_STATUS.DONE },
     }),

@@ -588,6 +588,13 @@ const es = {
     home: "Panel",
   },
   demo: {
+    inProgress: "Atendida",
+    claim: "Atenderla",
+    markDone: "Marcar como atendida",
+    close: "Cerrar",
+    sentAt: "Enviada",
+    status: "Estado",
+    doneMessage: "Solicitud atendida: el invitado lo ve en su teléfono.",
     title: "Solicitudes de invitados",
     pending: "{n} en curso",
     live: "En directo",
@@ -601,6 +608,7 @@ const es = {
     minutesAgo: "hace {n} min",
   },
   guest: {
+    sending: "Enviando…",
     greeting: "¿En qué podemos ayudarle?",
     tableShort: "Mesa",
     actDrink: "Bebida",

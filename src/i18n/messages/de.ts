@@ -588,6 +588,13 @@ const de = {
     home: "Dashboard",
   },
   demo: {
+    inProgress: "Übernommen",
+    claim: "Übernehmen",
+    markDone: "Als erledigt markieren",
+    close: "Schließen",
+    sentAt: "Gesendet",
+    status: "Status",
+    doneMessage: "Anfrage erledigt: der Gast sieht es auf seinem Handy.",
     title: "Gästeanfragen",
     pending: "{n} offen",
     live: "Live",
@@ -601,6 +608,7 @@ const de = {
     minutesAgo: "vor {n} Min.",
   },
   guest: {
+    sending: "Wird gesendet…",
     greeting: "Wie können wir helfen?",
     tableShort: "Tisch",
     actDrink: "Getränk",

@@ -684,6 +684,16 @@ function SheetBody({
   onClose: () => void;
   onSend: (type: string, message: string, category: RequestCategory, urgent?: boolean) => void;
 }) {
+  // Pendant l'envoi : petite roue + « Envoi… » (le visiteur voit que ça part).
+  const busy = (label: string) =>
+    pending ? (
+      <span className="inline-flex items-center justify-center gap-2">
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
+        {t("guest.sending")}
+      </span>
+    ) : (
+      label
+    );
   const header = (title: string, Icon?: IconType, danger = false) => (
     <div className="mb-4 flex items-center gap-3">
       {Icon ? (
@@ -729,7 +739,7 @@ function SheetBody({
           }
           className="mt-4 w-full rounded-2xl bg-red-600 px-4 py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.99] disabled:opacity-60"
         >
-          {t("guest.urgentConfirm")}
+          {busy(t("guest.urgentConfirm"))}
         </button>
       </>
     );
@@ -760,7 +770,7 @@ function SheetBody({
           }
           className={`${primaryClass} mt-4`}
         >
-          {t("guest.sheetSend")}
+          {busy(t("guest.sheetSend"))}
         </button>
       </>
     );
@@ -794,7 +804,7 @@ function SheetBody({
           }
           className={`${primaryClass} mt-4`}
         >
-          {t("guest.waiterConfirm")}
+          {busy(t("guest.waiterConfirm"))}
         </button>
       </>
     );
@@ -845,7 +855,7 @@ function SheetBody({
         onClick={() => onSend(action.type, details.trim(), action.category)}
         className={`${primaryClass} mt-4`}
       >
-        {t("guest.sheetSend")}
+        {busy(t("guest.sheetSend"))}
       </button>
     </>
   );
