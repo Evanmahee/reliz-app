@@ -137,15 +137,16 @@ export function DemoBoard() {
       {rows.length === 0 ? (
         // centré dans l'écran, avec des ondes qui partent de la cloche : « en attente d'une demande »
         <div className="flex flex-1 flex-col items-center justify-center pb-16 text-center">
-          <div className="relative flex h-24 w-24 items-center justify-center" aria-hidden>
-            <span className="demo-wave absolute inset-0 rounded-full border border-brand-500/40" />
-            <span className="demo-wave absolute inset-0 rounded-full border border-brand-500/40 [animation-delay:1.1s]" />
-            <span className="demo-wave absolute inset-0 rounded-full border border-brand-500/40 [animation-delay:2.2s]" />
-            <span className="demo-bell relative flex h-14 w-14 items-center justify-center rounded-full bg-white text-brand-600 shadow-sm ring-1 ring-brand-900/8">
-              <MdOutlineRoomService className="h-7 w-7" />
+          <div className="relative flex h-36 w-36 items-center justify-center" aria-hidden>
+            <span className="demo-wave absolute inset-0 rounded-full" />
+            <span className="demo-wave absolute inset-0 rounded-full [animation-delay:1.2s]" />
+            <span className="demo-wave absolute inset-0 rounded-full [animation-delay:2.4s]" />
+            <span className="demo-halo absolute h-24 w-24 rounded-full" />
+            <span className="demo-float relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-b from-white to-cream text-brand-600 shadow-[0_10px_30px_-10px_rgba(120,70,30,0.45)] ring-1 ring-brand-900/8">
+              <MdOutlineRoomService className="demo-bell h-8 w-8" />
             </span>
           </div>
-          <p className="mt-6 text-base font-semibold text-brand-950">{t("demo.emptyTitle")}</p>
+          <p className="mt-10 text-base font-semibold text-brand-950">{t("demo.emptyTitle")}</p>
           <p className="mt-1.5 max-w-[16rem] text-sm text-brand-900/55 [text-wrap:balance]">{t("demo.emptyHint")}</p>
         </div>
       ) : (
