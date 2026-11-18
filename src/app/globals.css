@@ -151,6 +151,3 @@ body {
 }
 .demo-float { animation: demo-float 3.6s ease-in-out infinite; }
 .demo-bell { animation: demo-bell 3.6s ease-in-out infinite; transform-origin: 50% 25%; }
-@media (prefers-reduced-motion: reduce) {
-  .demo-wave, .demo-halo, .demo-float, .demo-bell { animation: none; }
-}
