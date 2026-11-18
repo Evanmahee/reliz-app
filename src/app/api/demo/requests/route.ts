@@ -49,8 +49,22 @@ export async function GET(req: Request) {
     prisma.guestAllergy.deleteMany({ where: { eventId: event.id } }).then(() => null),
   ]);
 
+  // Chaque visiteur ne voit que SES demandes (identifiants générés par son
+  // navigateur, non devinables) : pas de messages d'inconnus affichés à tous.
+  const ids = (new URL(req.url).searchParams.get("ids") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => /^[a-zA-Z0-9_-]{12,40}$/.test(s))
+    .slice(0, 20);
+  if (ids.length === 0) {
+    return NextResponse.json(
+      { eventName: event.name, requests: [] },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const rows = await prisma.guestRequest.findMany({
-    where: { eventId: event.id },
+    where: { eventId: event.id, id: { in: ids } },
     orderBy: { createdAt: "desc" },
     take: 6,
     select: {

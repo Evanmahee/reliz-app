@@ -15,6 +15,7 @@ import {
   MdOutlineRoomService,
   MdOutlineSchedule,
 } from "react-icons/md";
+import { DEMO_SLUG } from "@/lib/demo";
 import { useT } from "@/i18n/i18n-provider";
 
 type Row = {
@@ -51,7 +52,18 @@ export function DemoBoard() {
   const load = useCallback(async () => {
     if (document.visibilityState !== "visible") return;
     try {
-      const res = await fetch("/api/demo/requests", { cache: "no-store" });
+      // Les demandes envoyées depuis le téléphone invité de CE navigateur
+      // (même stockage que l'app invité, intégrée dans la même page).
+      let ids: string[] = [];
+      try {
+        const sent = JSON.parse(localStorage.getItem(`reliz_sent_${DEMO_SLUG}`) ?? "[]") as { id?: string }[];
+        ids = Array.isArray(sent) ? sent.map((s) => String(s?.id ?? "")).filter(Boolean).slice(0, 20) : [];
+      } catch {
+        /* stockage indisponible : liste vide */
+      }
+      const res = await fetch(`/api/demo/requests?ids=${encodeURIComponent(ids.join(","))}`, {
+        cache: "no-store",
+      });
       if (!res.ok) return;
       const data = (await res.json()) as { eventName: string; requests: Row[] };
       setRows(data.requests);

@@ -8,6 +8,7 @@ import {
 } from "@/lib/constants";
 import { clientIpFromRequest } from "@/lib/rate-limit";
 import { hitRateLimit } from "@/lib/rate-limit-db";
+import { DEMO_SLUG } from "@/lib/demo";
 import { prisma } from "@/lib/prisma";
 
 const RATE_LIMIT = 15;
@@ -201,7 +202,9 @@ export async function POST(req: Request) {
       },
     }),
   ]);
-  if (recentCount >= TABLE_MAX_PER_MINUTE || openCount >= TABLE_MAX_OPEN) {
+  // Démo du site : tous les visiteurs partagent la table 12, seule la limite par visiteur (IP) s'applique.
+  const isDemo = publicSlug === DEMO_SLUG;
+  if (!isDemo && (recentCount >= TABLE_MAX_PER_MINUTE || openCount >= TABLE_MAX_OPEN)) {
     const loc = localeFromRequest(req);
     return NextResponse.json(
       { error: RATE_LIMIT_MESSAGES[loc], messages: RATE_LIMIT_MESSAGES },
