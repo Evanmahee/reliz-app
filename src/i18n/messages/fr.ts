@@ -622,7 +622,7 @@ const fr = {
     pending: "{n} en cours",
     live: "En direct",
     emptyTitle: "Aucune demande pour l’instant",
-    emptyHint: "Envoyez une demande depuis le téléphone de l’invité : elle arrive ici en quelques secondes.",
+    emptyHint: "Envoyez une demande depuis le téléphone de l’invité\u00a0: elle arrive ici en quelques secondes.",
     table: "Table {n}",
     new: "Nouvelle",
     claimed: "Prise en charge par {name}",

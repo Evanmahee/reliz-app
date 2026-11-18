@@ -118,7 +118,7 @@ export function DemoBoard() {
   const open = rows.find((r) => r.id === openId) ?? null;
 
   return (
-    <div className="min-h-screen bg-cream px-4 pb-8 pt-5">
+    <div className="flex min-h-screen flex-col bg-cream px-4 pb-8 pt-5">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-brand-950">{t("demo.title")}</h1>
         <span className="rounded-full bg-brand-950 px-3 py-1 text-xs font-medium text-white">
@@ -135,9 +135,18 @@ export function DemoBoard() {
       </p>
 
       {rows.length === 0 ? (
-        <div className="mt-6 rounded-3xl bg-white p-6 text-center ring-1 ring-brand-900/8">
-          <p className="text-sm font-medium text-brand-950">{t("demo.emptyTitle")}</p>
-          <p className="mt-1 text-xs text-brand-900/55">{t("demo.emptyHint")}</p>
+        // centré dans l'écran, avec des ondes qui partent de la cloche : « en attente d'une demande »
+        <div className="flex flex-1 flex-col items-center justify-center pb-16 text-center">
+          <div className="relative flex h-24 w-24 items-center justify-center" aria-hidden>
+            <span className="demo-wave absolute inset-0 rounded-full border border-brand-500/40" />
+            <span className="demo-wave absolute inset-0 rounded-full border border-brand-500/40 [animation-delay:1.1s]" />
+            <span className="demo-wave absolute inset-0 rounded-full border border-brand-500/40 [animation-delay:2.2s]" />
+            <span className="demo-bell relative flex h-14 w-14 items-center justify-center rounded-full bg-white text-brand-600 shadow-sm ring-1 ring-brand-900/8">
+              <MdOutlineRoomService className="h-7 w-7" />
+            </span>
+          </div>
+          <p className="mt-6 text-base font-semibold text-brand-950">{t("demo.emptyTitle")}</p>
+          <p className="mt-1.5 max-w-[16rem] text-sm text-brand-900/55 [text-wrap:balance]">{t("demo.emptyHint")}</p>
         </div>
       ) : (
         <ul className="mt-5 space-y-2.5">

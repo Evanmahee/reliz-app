@@ -116,3 +116,23 @@ body {
   }
 }
 
+
+/* Démo équipe, écran vide : ondes qui partent de la cloche + léger balancement */
+@keyframes demo-wave {
+  0% { transform: scale(0.6); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes demo-bell {
+  0%, 70%, 100% { transform: rotate(0); }
+  76% { transform: rotate(-9deg); }
+  82% { transform: rotate(7deg); }
+  88% { transform: rotate(-4deg); }
+  94% { transform: rotate(2deg); }
+}
+.demo-wave { animation: demo-wave 3.3s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; opacity: 0; }
+.demo-bell { animation: demo-bell 3.3s ease-in-out infinite; transform-origin: 50% 30%; }
+@media (prefers-reduced-motion: reduce) {
+  .demo-wave, .demo-bell { animation: none; }
+  .demo-wave { opacity: 0.4; }
+}
