@@ -75,6 +75,22 @@ export async function ensureUserProfile(authUser: {
     return existing;
   }
 
+  // Profil créé à la main (base de données) avec un autre identifiant que le
+  // compte de connexion : on le relie au compte, seulement si son ancien
+  // identifiant ne correspond à aucun compte de connexion existant.
+  const byEmail = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+  if (byEmail) {
+    const rows = await prisma.$queryRaw<{ n: number }[]>`
+      select count(*)::int as n from auth.users where id::text = ${byEmail.id}`;
+    if (rows[0]?.n === 0) {
+      return prisma.user.update({
+        where: { id: byEmail.id },
+        data: { id: authUser.id },
+        select: { id: true, email: true, name: true, role: true, employerId: true },
+      });
+    }
+  }
+
   if (!(await canBecomeOwner(email))) {
     throw new OwnerNotAllowedError(email);
   }

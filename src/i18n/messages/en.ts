@@ -110,12 +110,10 @@ const en = {
       nonautorise: "This account has no caterer access. Ask the administrator to add you.",
       bloque: "Too many attempts. Try again in 15 minutes, or use “Forgot password”.",
       champs: "Please fill in all fields.",
-      config:
-        "Missing env vars: NEXT_PUBLIC_SUPABASE_URL, anon key, and DATABASE_URL (see .env.example).",
-      db: "Database unreachable or User profile table missing. Run prisma/supabase-auth-user-profile.sql in Supabase → SQL Editor, and check the Session pooler.",
-      session:
-        "Could not save the Supabase session. Check Auth keys and NEXT_PUBLIC_APP_URL.",
-      serveur: "Unexpected server error. Check Vercel logs or try again later.",
+      config: "Sign-in is temporarily unavailable. Please try again in a few minutes.",
+      db: "We couldn’t open your account. Please try again in a few minutes; if it keeps happening, contact support.",
+      session: "We couldn’t sign you in. Please try again; if it keeps happening, contact support.",
+      serveur: "Something went wrong. Please try again in a few minutes.",
     },
   },
   showcase: {

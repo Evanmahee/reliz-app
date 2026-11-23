@@ -303,7 +303,10 @@ export async function setStaffSuspendedAction(formData: FormData) {
   const { error } = await admin.auth.admin.updateUserById(member.id, {
     ban_duration: suspend ? "876000h" : "none",
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[staff] Supabase Auth:", error.message);
+    throw new Error("Action impossible pour le moment. Réessayez.");
+  }
   revalidatePath("/dashboard/equipe");
 }
 
@@ -319,7 +322,10 @@ export async function resetStaffPasswordAction(formData: FormData) {
   }
   const admin = createSupabaseAdminClient();
   const { error } = await admin.auth.admin.updateUserById(member.id, { password });
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[staff] Supabase Auth:", error.message);
+    throw new Error("Action impossible pour le moment. Réessayez.");
+  }
   revalidatePath("/dashboard/equipe");
 }
 

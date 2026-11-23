@@ -110,13 +110,10 @@ const fr = {
       nonautorise: "Ce compte n’a pas d’accès traiteur. Demandez à l’administrateur de vous ajouter.",
       bloque: "Trop de tentatives. Réessayez dans 15 minutes, ou utilisez « Mot de passe oublié ».",
       champs: "Merci de remplir tous les champs.",
-      config:
-        "Variables manquantes : NEXT_PUBLIC_SUPABASE_URL, clé anon, et DATABASE_URL (voir .env.example).",
-      db: "La base de données est injoignable ou le profil User est absent. Exécutez prisma/supabase-auth-user-profile.sql dans Supabase → SQL Editor, et vérifiez le Session pooler.",
-      session:
-        "Impossible d’enregistrer la session Supabase. Vérifiez les clés Auth et NEXT_PUBLIC_APP_URL.",
-      serveur:
-        "Erreur serveur inattendue. Consultez les logs Vercel ou réessayez plus tard.",
+      config: "La connexion est momentanément indisponible. Réessayez dans quelques minutes.",
+      db: "Votre compte n’a pas pu être ouvert. Réessayez dans quelques minutes ; si le problème continue, contactez le support.",
+      session: "La connexion n’a pas pu aboutir. Réessayez ; si le problème continue, contactez le support.",
+      serveur: "Une erreur est survenue. Réessayez dans quelques minutes.",
     },
   },
   showcase: {
