@@ -97,6 +97,8 @@ const fr = {
     newMismatch: "Les deux mots de passe ne correspondent pas.",
     newFailed: "Impossible d’enregistrer ce mot de passe. Réessayez.",
     tagline: "Événements & service en salle",
+    sloganA: "L’exigence du détail,",
+    sloganB: "l’émotion du résultat.",
     title: "Connectez-vous pour continuer",
     email: "Email",
     emailPh: "vous@exemple.com",

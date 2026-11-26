@@ -96,6 +96,8 @@ const es = {
     newMismatch: "Las dos contraseñas no coinciden.",
     newFailed: "No se pudo guardar la contraseña. Inténtelo de nuevo.",
     tagline: "Eventos y servicio en sala",
+    sloganA: "La exigencia del detalle,",
+    sloganB: "la emoción del resultado.",
     title: "Inicia sesión para continuar",
     email: "Correo electrónico",
     emailPh: "tu@ejemplo.com",

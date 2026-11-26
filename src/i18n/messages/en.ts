@@ -97,6 +97,8 @@ const en = {
     newMismatch: "The two passwords do not match.",
     newFailed: "Could not save this password. Please try again.",
     tagline: "Events & table service",
+    sloganA: "Attention to detail,",
+    sloganB: "emotion in the result.",
     title: "Sign in to continue",
     email: "Email",
     emailPh: "you@example.com",

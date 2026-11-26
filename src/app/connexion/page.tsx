@@ -52,6 +52,10 @@ export default async function ConnexionPage({
             <RelizLogo height={64} priority />
             <LocaleSwitcher returnTo="/connexion" />
           </div>
+          <p className="mt-4 text-[17px] leading-snug tracking-tight text-zinc-900">
+            {t("connexion.sloganA")}{" "}
+            <em className="font-serif text-[#a67c2e]">{t("connexion.sloganB")}</em>
+          </p>
           <p className="mt-2 text-[10px] font-medium tracking-[0.18em] text-zinc-400 uppercase">
             {t("connexion.tagline")}
           </p>

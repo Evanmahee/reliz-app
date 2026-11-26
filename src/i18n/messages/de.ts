@@ -96,6 +96,8 @@ const de = {
     newMismatch: "Die beiden Passwörter stimmen nicht überein.",
     newFailed: "Passwort konnte nicht gespeichert werden. Bitte erneut versuchen.",
     tagline: "Events & Service im Saal",
+    sloganA: "Liebe zum Detail,",
+    sloganB: "Emotion im Ergebnis.",
     title: "Melden Sie sich an, um fortzufahren",
     email: "E-Mail",
     emailPh: "sie@beispiel.com",
