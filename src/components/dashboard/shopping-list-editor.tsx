@@ -91,14 +91,14 @@ export function ShoppingListEditor({
                 value={row.name}
                 onChange={(e) => updateRow(row.id, { name: e.target.value })}
                 placeholder={t("shopping.itemPh")}
-                className="flex-1"
+                className="min-w-0 flex-1"
                 disabled={readOnly}
               />
               <Input
                 value={row.quantity}
                 onChange={(e) => updateRow(row.id, { quantity: e.target.value })}
                 placeholder={t("shopping.qtyPh")}
-                className="w-24"
+                className="w-24! shrink-0"
                 disabled={readOnly}
               />
               {!readOnly ? (

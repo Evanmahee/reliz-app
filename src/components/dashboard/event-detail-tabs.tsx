@@ -479,9 +479,9 @@ export function EventDetailTabs({
                 className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end"
               >
                 <input type="hidden" name="eventId" value={eventId} />
-                <Input name="name" placeholder={t("events.accessoryName")} className="sm:flex-1" required />
-                <Input name="quantity" type="number" min={1} defaultValue={1} className="w-24" />
-                <Input name="notes" placeholder={t("events.accessoryNotes")} className="sm:flex-1" />
+                <Input name="name" placeholder={t("events.accessoryName")} className="sm:min-w-0 sm:flex-[2]" required />
+                <Input name="quantity" type="number" min={1} defaultValue={1} className="sm:w-24 sm:flex-none" />
+                <Input name="notes" placeholder={t("events.accessoryNotes")} className="sm:min-w-0 sm:flex-1" />
                 <SubmitButton pendingLabel={t("events.adding")}>{t("events.add")}</SubmitButton>
               </form>
             ) : null}
