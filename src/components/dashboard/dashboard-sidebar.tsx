@@ -24,7 +24,7 @@ export function DashboardSidebar({
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex h-svh w-60 flex-col overflow-y-auto border-r border-zinc-200 bg-white max-lg:hidden">
       <Link href="/dashboard" className="block px-5 py-6">
-        <RelizLogo height={26} priority />
+        <RelizLogo height={52} priority />
         <p className="mt-2 text-[11px] font-medium text-zinc-400">
           {t("nav.sidebarTagline")}
         </p>

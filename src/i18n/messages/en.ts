@@ -96,7 +96,7 @@ const en = {
     newTooShort: "At least 10 characters.",
     newMismatch: "The two passwords do not match.",
     newFailed: "Could not save this password. Please try again.",
-    tagline: "Events & in-room service",
+    tagline: "Events & table service",
     title: "Sign in to continue",
     email: "Email",
     emailPh: "you@example.com",

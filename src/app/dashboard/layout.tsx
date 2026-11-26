@@ -55,7 +55,7 @@ export default async function DashboardLayout({
       <div className="flex min-h-screen min-w-0 flex-col lg:pl-60">
         <header className="sticky top-0 z-40 flex shrink-0 items-center justify-between border-b border-zinc-200 bg-white/95 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md lg:hidden">
           <Link href="/dashboard" className="inline-flex items-center">
-            <RelizLogo height={22} />
+            <RelizLogo height={40} />
           </Link>
           <div className="flex items-center gap-2">
             <LocaleSwitcher returnTo="/dashboard" variant="select" />

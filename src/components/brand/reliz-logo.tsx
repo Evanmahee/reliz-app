@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-const ASPECT = 312 / 101;
+const ASPECT = 1; // logo rond Reliz (carré)
 
 type Props = {
   /** Hauteur affichée en px ; la largeur suit le ratio du logo. */
@@ -13,7 +13,7 @@ export function RelizLogo({ height = 28, className = "", priority = false }: Pro
   const width = Math.round(height * ASPECT);
   return (
     <Image
-      src="/reliz-logo.svg"
+      src="/reliz-logo.png"
       alt="Reliz"
       width={width}
       height={height}

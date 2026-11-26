@@ -49,7 +49,7 @@ export default async function ConnexionPage({
       <div className="flex min-h-screen w-full flex-col justify-center bg-white px-6 py-10 sm:px-10 lg:w-1/2 lg:max-w-none lg:px-16 xl:px-20">
         <div className="mx-auto w-full max-w-md">
           <div className="flex items-start justify-between gap-3">
-            <RelizLogo height={32} priority />
+            <RelizLogo height={64} priority />
             <LocaleSwitcher returnTo="/connexion" />
           </div>
           <p className="mt-2 text-[10px] font-medium tracking-[0.18em] text-zinc-400 uppercase">
